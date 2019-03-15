@@ -27,6 +27,7 @@ ENV SRC_DIR=/data \
     BACKUP_NAME=world \
     INITIAL_DELAY=120 \
     INTERVAL_SEC=86400 \
+    PRUNE_BACKUPS_DAYS=7 \
     TYPE=VANILLA \
     LEVEL=world \
     RCON_PORT=25575 \

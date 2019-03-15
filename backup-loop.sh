@@ -6,15 +6,31 @@ log() {
   echo "$(date -Iseconds) ${level} $*"
 }
 
+backupSet=${BACKUP_SET}
+excludes="--exclude '*.jar'"
+
 case $TYPE in
   FTB|CURSEFORGE)
-    resolvedSrcDir="${SRC_DIR}/FeedTheBeast"
+    cd ${SRC_DIR}/FeedTheBeast
     ;;
   *)
-    resolvedSrcDir="${SRC_DIR}"
+    cd ${SRC_DIR}
     ;;
 esac
 
+backupSet="${backupSet} ${LEVEL}"
+backupSet="${backupSet} $(find . -maxdepth 1 -name '*.properties' -o -name '*.yml' -o -name '*.yaml' -o -name '*.json')"
+
+if [ -d plugins ]; then
+  backupSet="${backupSet} plugins"
+fi
+
+log INFO "waiting for rcon readiness..."
+while true; do
+  rcon-cli save-on >& /dev/null && break
+
+  sleep 10
+done
 log INFO "waiting initial delay of ${INITIAL_DELAY} seconds..."
 sleep ${INITIAL_DELAY}
 
@@ -28,8 +44,8 @@ while true; do
     if [ $? = 0 ]; then
 
       outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.tgz"
-      log INFO "backing up '${LEVEL}' in ${resolvedSrcDir} to ${outFile}"
-      tar c -f ${outFile} -C ${resolvedSrcDir} ${LEVEL}
+      log INFO "backing up content in $(pwd) to ${outFile}"
+      tar c -f ${outFile} ${backupSet} ${excludes}
       if [ $? != 0 ]; then
         log ERROR "backup failed"
       else
@@ -43,6 +59,11 @@ while true; do
     log ERROR "rcon save-off command failed"
   fi
 
-  log INFO "Sleeping ${INTERVAL_SEC} seconds..."
+  if (( ${PRUNE_BACKUPS_DAYS} > 0 )); then
+    log INFO "pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
+    find ${DEST_DIR} -mtime +${PRUNE_BACKUPS_DAYS} -delete
+  fi
+
+  log INFO "sleeping ${INTERVAL_SEC} seconds..."
   sleep ${INTERVAL_SEC}
 done
