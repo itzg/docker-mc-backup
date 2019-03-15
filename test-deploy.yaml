@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: test-mc-backup
+  name: test-mc-backup
+spec:
+  replicas: 1
+  serviceName: test-mc-backup
+  selector:
+    matchLabels:
+      app: test-mc-backup
+  template:
+    metadata:
+      labels:
+        app: test-mc-backup
+    spec:
+      containers:
+        - name: mc
+          image: itzg/minecraft-server
+          env:
+            - name: EULA
+              value: "TRUE"
+          volumeMounts:
+            - mountPath: /data
+              name: data
+        - name: backup
+          image: mc-backup
+          imagePullPolicy: Never
+          securityContext:
+            runAsUser: 1000
+          env:
+            - name: INTERVAL_SEC
+              value: "60"
+            - name: INITIAL_DELAY
+              value: "60"
+          volumeMounts:
+            - mountPath: /data
+              name: data
+              readOnly: true
+            - mountPath: /backups
+              name: backups
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: backups
+          persistentVolumeClaim:
+            claimName: backups
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Mi
+    - metadata:
+        name: backups
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-mc-backup
+spec:
+  selector:
+    app: test-mc-backup
+  ports:
+    - port: 25565
+  type: NodePort
