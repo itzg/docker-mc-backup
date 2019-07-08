@@ -45,7 +45,7 @@ while true; do
 
       outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.tgz"
       log INFO "backing up content in $(pwd) to ${outFile}"
-      tar c -f ${outFile} ${backupSet} ${excludes}
+      tar cz -f ${outFile} ${backupSet} ${excludes}
       if [ $? != 0 ]; then
         log ERROR "backup failed"
       else
