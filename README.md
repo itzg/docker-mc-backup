@@ -1,3 +1,5 @@
+[![Docker Pulls](https://img.shields.io/docker/pulls/itzg/mc-backup.svg)](https://hub.docker.com/r/itzg/mc-backup)
+
 Provides a side-car container to backup itzg/minecraft-server world data.
 
 ## Environment variables
