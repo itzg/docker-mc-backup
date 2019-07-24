@@ -31,7 +31,7 @@ spec:
           securityContext:
             runAsUser: 1000
           env:
-            - name: INTERVAL_SEC
+            - name: BACKUP_INTERVAL
               value: "60"
             - name: INITIAL_DELAY
               value: "10"
