@@ -14,6 +14,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `RCON_PORT`=25575
 - `RCON_PASSWORD`=minecraft
 - `EXCLUDES`=\*.jar,cache,logs
+- `LINK_LATEST`=false
 
 If `PRUNE_BACKUP_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
 
@@ -28,6 +29,8 @@ Examples:
 - `INITIAL_DELAY`="120" -> wait 2 minutes before starting
 
 `EXCLUDES` is a comma-separated list of glob(3) patterns to exclude from backups. By default excludes all jar files (plugins, server files), logs folder and cache (used by i.e. PaperMC server).
+
+`LINK_LATEST` is a true/false flag that creates a symbolic link to the latest backup.
 
 ## Volumes
 
