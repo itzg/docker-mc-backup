@@ -12,6 +12,7 @@ readonly backup_extension="tgz"
 : "${RCON_PORT:=25575}"
 : "${RCON_PASSWORD:=minecraft}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
+: "${LINK_LATEST:=false}"
 
 export RCON_PORT
 export RCON_PASSWORD
@@ -114,6 +115,9 @@ while true; do
     # shellcheck disable=SC2086
     if tar "${excludes[@]}" -czf "${outFile}" -C "${SRC_DIR}" .; then
       log INFO "successfully backed up"
+      if [ "${LINK_LATEST^^}" == "TRUE" ]; then
+        ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
+      fi
     else
       log ERROR "backup failed"
     fi
