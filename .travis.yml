@@ -5,23 +5,15 @@ jobs:
   include:
     - stage: Linting and sanity tests
       name: Lint script with shellcheck
-      script:
-        - "readarray -t shell_scripts < <(find * -name '*.sh' -a ! -path '*/.git/*')"
-        - echo checking "${shell_scripts[@]}"
-        - shellcheck "${shell_scripts[@]}"
+      script: ./tests/lint.shellcheck.sh
     - name: Lint dockerfile
-      # DL3006 Always tag the version of an image explicitly
-      # DL3018 Pin versions in apk add. Instead of `apk add <package>` use `apk add <package>=<version>`
-      script: >- 
-        docker run --rm -i hadolint/hadolint hadolint
-        --ignore DL3018
-        --ignore DL3006
-        - < Dockerfile
-    - name: Test simple backup and exclusion scenario
+      script: bash ./tests/lint.hadolint.sh
+    - name: Test simple backup and exclusion scenario with tar
       before_install:
         - sudo apt-get update
         - sudo apt-get install -y
           tree
+          coreutils
       env:
         SRC_DIR: /tmp/source
         DEST_DIR: /tmp/dest
@@ -31,30 +23,20 @@ jobs:
         EXCLUDES: '*.jar,exclude_dir'
         RCON_PATH: /usr/bin/rcon-cli
         PRUNE_BACKUPS_DAYS: 3
-      script:
-        - mkdir -p "${SRC_DIR}/"{in,ex}clude_dir "${DEST_DIR}" "${EXTRACT_DIR}"
-        - touch "${SRC_DIR}/"{backup_me.{1,2}.json,exclude_me.jar}
-        - touch "${SRC_DIR}/include_dir/"{backup_me.{1,2}.json,exclude_me.jar}
-        - touch "${SRC_DIR}/exclude_dir/"exclude_me.{1,2}.{json,jar}
-        - tree "${SRC_DIR}"
-        - touch -d "$(( PRUNE_BACKUPS_DAYS + 2 )) days ago" "${DEST_DIR}/fake_backup_that_should_be_deleted.tgz"
-        - ls -al "${DEST_DIR}"
-        - docker build -t testimg .
-        - echo -e '#!/bin/bash\ntrue' > rcon-cli && chmod +x rcon-cli
-        - timeout 50 docker run --rm 
-          --env SRC_DIR
-          --env DEST_DIR
-          --env BACKUP_INTERVAL
-          --env INITIAL_DELAY
-          --env EXCLUDES
-          --env PRUNE_BACKUPS_DAYS
-          --mount "type=bind,src=${SRC_DIR},dst=${SRC_DIR}"
-          --mount "type=bind,src=${DEST_DIR},dst=${DEST_DIR}"
-          --mount "type=bind,src=$(pwd)/rcon-cli,dst=${RCON_PATH}"
-          testimg
-        - tree "${DEST_DIR}"
-        - tar -xzf "${DEST_DIR}/"*.tgz -C "${EXTRACT_DIR}"
-        - tree "${EXTRACT_DIR}"
-        - '[ -z "$(find "${EXTRACT_DIR}" -name "exclude_*" -print -quit)" ]'
-        - '[ 4 -eq "$(find "${EXTRACT_DIR}" -name "backup_me*" -print | wc -l)" ]'
-
+      script: bash ./tests/test.simple.tar.sh
+    - name: Test restic handling
+      before_install:
+        - sudo apt-get update
+        - sudo apt-get install -y
+          tree
+          coreutils
+      env:
+        SRC_DIR: /tmp/source
+        DEST_DIR: /tmp/dest
+        RESTIC_REPOSITORY: /tmp/dest
+        BACKUP_INTERVAL: 0
+        INITIAL_DELAY: 0s
+        EXCLUDES: '*.jar,exclude_dir'
+        RCON_PATH: /usr/bin/rcon-cli
+        RESTIC_PASSWORD: 1234
+      script: bash ./tests/test.simple.restic.sh
