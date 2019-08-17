@@ -49,6 +49,7 @@ log() {
   shift
   local valid_levels=(
     "INFO"
+    "WARN"
     "ERROR"
     "INTERNALERROR"
   )
