@@ -6,8 +6,17 @@ _common_env: &_common_env
   RCON_PATH: /usr/bin/rcon-cli
   DEBUG: true
 
+_common_install: &_common_install
+  - sudo apt-get update
+  - sudo apt-get install -y
+    tree
+    coreutils
+
+
 services:
   - docker
+
+language: bash
 
 jobs:
   include:
@@ -17,11 +26,7 @@ jobs:
     - name: Lint dockerfile
       script: bash ./tests/lint.hadolint.sh
     - name: Test simple backup and exclusion scenario with tar
-      before_install:
-        - sudo apt-get update
-        - sudo apt-get install -y
-          tree
-          coreutils
+      before_install: *_common_install
       env:
         <<: *_common_env
         EXTRACT_DIR: /tmp/extract
@@ -29,11 +34,7 @@ jobs:
         PRUNE_BACKUPS_DAYS: 3
       script: bash ./tests/test.simple.tar.sh
     - name: Test restic handling
-      before_install:
-        - sudo apt-get update
-        - sudo apt-get install -y
-          tree
-          coreutils
+      before_install: *_common_install
       env:
         <<: *_common_env
         RESTIC_REPOSITORY: /tmp/dest
@@ -41,11 +42,7 @@ jobs:
         RESTIC_PASSWORD: 1234
       script: bash ./tests/test.simple.restic.sh
     - name: Test restic rclone handling
-      before_install:
-        - sudo apt-get update
-        - sudo apt-get install -y
-          tree
-          coreutils
+      before_install: *_common_install
       env:
         <<: *_common_env
         RESTIC_REPOSITORY: rclone:/tmp/dest
