@@ -44,6 +44,7 @@ timeout 50 docker run --rm \
           --env INITIAL_DELAY \
           --env EXCLUDES \
           --env PRUNE_BACKUPS_DAYS \
+          --env DEBUG \
           --mount "type=bind,src=${LOCAL_SRC_DIR},dst=${SRC_DIR}" \
           --mount "type=bind,src=${LOCAL_DEST_DIR},dst=${DEST_DIR}" \
           --mount "type=bind,src=${TMP_DIR}/rcon-cli,dst=${RCON_PATH}" \

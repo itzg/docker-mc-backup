@@ -42,6 +42,7 @@ timeout --kill-after=20 50 docker run --rm \
     --env PRUNE_BACKUPS_DAYS \
     --env RESTIC_REPOSITORY \
     --env RESTIC_PASSWORD \
+    --env DEBUG \
     --env BACKUP_METHOD=restic \
     --mount "type=bind,src=${LOCAL_SRC_DIR},dst=${SRC_DIR}" \
     --mount "type=bind,src=${LOCAL_DEST_DIR},dst=${DEST_DIR}" \
