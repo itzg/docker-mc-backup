@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+if [ "${DEBUG:-false}" == "true" ]; then
+  set -x
+fi
+
 : "${SRC_DIR:=/data}"
 : "${DEST_DIR:=/backups}"
 : "${BACKUP_NAME:=world}"
@@ -193,11 +197,10 @@ restic() {
       log ERROR "RESTIC_REPOSITORY is not set!"
       return 1
     fi
-    # TODO: Not sure if this method is enough to determine if all needed configs are provided.
     if output="$(command restic snapshots 2>&1 >/dev/null)"; then
       log INFO "Repository already initialized"
       _check
-    elif <<<"${output}" grep -q 'no such file or directory$'; then
+    elif <<<"${output}" grep -q '^Is there a repository at the following location?$'; then
       log INFO "Initializing new restic repository..."
       command restic init | log INFO
     elif <<<"${output}" grep -q 'wrong password'; then
@@ -205,6 +208,7 @@ restic() {
       log ERROR "Wrong password provided to an existing repository?"
       return 1
     else
+      <<<"${output}" log ERROR
       log INTERNALERROR "Unhandled restic repository state."
       return 2
     fi

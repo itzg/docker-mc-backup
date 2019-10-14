@@ -1,3 +1,11 @@
+_common_env: &_common_env
+  SRC_DIR: /tmp/source
+  DEST_DIR: /tmp/dest
+  BACKUP_INTERVAL: 0
+  EXCLUDES: '*.jar,exclude_dir'
+  RCON_PATH: /usr/bin/rcon-cli
+  DEBUG: true
+
 services:
   - docker
 
@@ -15,13 +23,9 @@ jobs:
           tree
           coreutils
       env:
-        SRC_DIR: /tmp/source
-        DEST_DIR: /tmp/dest
+        <<: *_common_env
         EXTRACT_DIR: /tmp/extract
-        BACKUP_INTERVAL: 0
         INITIAL_DELAY: 5s
-        EXCLUDES: '*.jar,exclude_dir'
-        RCON_PATH: /usr/bin/rcon-cli
         PRUNE_BACKUPS_DAYS: 3
       script: bash ./tests/test.simple.tar.sh
     - name: Test restic handling
@@ -31,12 +35,20 @@ jobs:
           tree
           coreutils
       env:
-        SRC_DIR: /tmp/source
-        DEST_DIR: /tmp/dest
+        <<: *_common_env
         RESTIC_REPOSITORY: /tmp/dest
-        BACKUP_INTERVAL: 0
         INITIAL_DELAY: 0s
-        EXCLUDES: '*.jar,exclude_dir'
-        RCON_PATH: /usr/bin/rcon-cli
+        RESTIC_PASSWORD: 1234
+      script: bash ./tests/test.simple.restic.sh
+    - name: Test restic rclone handling
+      before_install:
+        - sudo apt-get update
+        - sudo apt-get install -y
+          tree
+          coreutils
+      env:
+        <<: *_common_env
+        RESTIC_REPOSITORY: rclone:/tmp/dest
+        INITIAL_DELAY: 0s
         RESTIC_PASSWORD: 1234
       script: bash ./tests/test.simple.restic.sh
