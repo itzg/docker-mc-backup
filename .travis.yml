@@ -12,7 +12,6 @@ _common_install: &_common_install
     tree
     coreutils
 
-
 services:
   - docker
 
