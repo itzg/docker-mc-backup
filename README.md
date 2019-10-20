@@ -50,6 +50,9 @@ At least one of `RESTIC_PASSWORD*` variables need to be defined, along with `RES
 :warning: | When using restic, at least one of `HOSTNAME` or `BACKUP_NAME` must be unique, when sharing a repository. Otherwise other instances using the same repository might prune your backups prematurely.
 ---|---
 
+:warning: | SFTP restic backend is not directly supported. Please use RCLONE backend with SFTP support.
+---|---
+
 ## Volumes
 
 - `/data` :

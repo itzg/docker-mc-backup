@@ -40,29 +40,41 @@ FROM alpine
 
 RUN apk -U --no-cache add \
     bash \
-    coreutils
+    coreutils \
+    openssh-client
+
 
 COPY --from=builder /opt/rcon-cli /opt/rcon-cli
 
 RUN ln -s /opt/rcon-cli /usr/bin
 
+
 COPY --from=builder /opt/restic /opt/restic
 
 RUN ln -s /opt/restic /usr/bin
+
 
 COPY --from=builder /opt/entrypoint-demoter /opt/entrypoint-demoter
 
 RUN ln -s /opt/entrypoint-demoter /usr/bin
 
+
 COPY --from=builder /opt/rclone /opt/rclone
 
 RUN ln -s /opt/rclone /usr/bin
+
 
 COPY backup-loop.sh /opt/
 
 RUN chmod +x /opt/backup-loop.sh
 
+
 VOLUME ["/data", "/backups"]
+
+# Workaround for some tools (i.e. RCLONE) creating cache files in $HOME
+# and not having permissions to write when demoter does demote to UID,
+# while keeping the $HOME=/root
+ENV HOME=/tmp
 
 ENTRYPOINT ["/opt/entrypoint-demoter", "--match", "/backups"]
 
