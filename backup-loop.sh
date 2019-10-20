@@ -7,7 +7,8 @@ if [ "${DEBUG:-false}" == "true" ]; then
 fi
 
 : "${SRC_DIR:=/data}"
-: "${DEST_DIR:=/backups}"
+: "${DESTINATION:="${DEST_DIR:-/backups}"}"
+: "${RCLONE_REPOSITORY:="${DESTINATION}"}"
 : "${BACKUP_NAME:=world}"
 : "${INITIAL_DELAY:=2m}"
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
@@ -17,6 +18,7 @@ fi
 : "${RCON_PASSWORD:=minecraft}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
 : "${LINK_LATEST:=false}"
+: "${RCLONE_MULTIPATH:=true}"
 
 export RCON_PORT
 export RCON_PASSWORD
@@ -149,20 +151,20 @@ call_if_function_exists() {
 
 tar() {
   _find_old_backups() {
-    find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
+    find "${DESTINATION}" -maxdepth 1 -name "*.${backup_extension}" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
   }
 
   init() {
-    mkdir -p "${DEST_DIR}"
+    mkdir -p "${DESTINATION}"
     readonly backup_extension="tgz"
   }
   backup() {
     ts=$(date -u +"%Y%m%d-%H%M%S")
-    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
+    outFile="${DESTINATION}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     command tar "${excludes[@]}" -czf "${outFile}" -C "${SRC_DIR}" .
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
-      ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
+      ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DESTINATION}/latest.${backup_extension}"
     fi
   }
   prune() {
@@ -239,6 +241,41 @@ restic() {
       log INFO "Forgetting snapshots older than ${PRUNE_BACKUPS_DAYS} days"
       _delete_old_backups --prune | log INFO
       _check | log INFO
+    fi
+  }
+  call_if_function_exists "${@}"
+}
+
+rclone() {
+  _find_old_backups() {
+    command rclone lsf --format "tp" "${DESTINATION}/${BACKUP_NAME}*" | awk \
+            -v DESTINATION="${DESTINATION}" \
+            -v PRUNE_DATE="$(date '+%Y-%m-%d %H:%M:%S' --date="${PRUNE_BACKUPS_DAYS} days ago")" \
+            'BEGIN { FS=";" } $1 > PRUNE_DATE { printf "%s/%s\n", DESTINATION, $2 }'
+  }
+  init() {
+    if [ "${RCLONE_MULTIPATH,,}" != "true" ] && (( PRUNE_BACKUPS_DAYS > 0 )); then
+      log ERROR "Non-multipath RCLONE prunning is not supported"
+      exit 1
+    fi
+  }
+  backup() {
+    if [ "${RCLONE_MULTIPATH,,}" == "true" ]; then # TODO: Find a better name
+      local ts
+      ts="$(date -u +"%Y%m%d-%H%M%S")"
+      local out_dest="${DESTINATION}/${BACKUP_NAME}-${ts}"
+    else
+      local out_dest="${DESTINATION}"
+    fi
+    log INFO "Backing up content in ${SRC_DIR} to ${out_dest}"
+    command rclone "${excludes[@]}" "${SRC_DIR}" "${out_dest}"
+  }
+  prune() {
+    if [ -n "$(_find_old_backups)" ]; then
+      log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
+      _find_old_backups | tee \
+            >(awk '{ printf "Removing %s\n", $0 }' | log INFO) \
+            >(while read -r path; do command rclone purge "${path}"; done)
     fi
   }
   call_if_function_exists "${@}"
