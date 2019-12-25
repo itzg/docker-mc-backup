@@ -12,6 +12,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `INITIAL_DELAY`=2m
 - `BACKUP_INTERVAL`=24h
 - `PRUNE_BACKUPS_DAYS`=7
+- `RCON_HOST`=localhost
 - `RCON_PORT`=25575
 - `RCON_PASSWORD`=minecraft
 - `EXCLUDES`=\*.jar,cache,logs

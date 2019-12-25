@@ -13,11 +13,13 @@ fi
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic
 : "${PRUNE_BACKUPS_DAYS:=7}"
+: "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
 : "${RCON_PASSWORD:=minecraft}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
 : "${LINK_LATEST:=false}"
 
+export RCON_HOST
 export RCON_PORT
 export RCON_PASSWORD
 
