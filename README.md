@@ -63,6 +63,8 @@ At least one of `RESTIC_PASSWORD*` variables need to be defined, along with `RES
 
 ## Example
 
+### Kubernetes
+
 An example StatefulSet deployment is provided [in this repository](test-deploy.yaml).
 
 The important part is the containers definition of the deployment:
@@ -91,4 +93,37 @@ containers:
         readOnly: true
       - mountPath: /backups
         name: backups
+```
+
+### Docker Compose
+
+```yaml
+version: '3.7'
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    ports:
+    - 25565:25565
+    environment:
+      EULA: "TRUE"
+    volumes:
+    - mc:/data
+  backups:
+    image: itzg/mc-backup
+    environment:
+      BACKUP_INTERVAL: "2h"
+      # instead of network_mode below, could declare RCON_HOST
+      # RCON_HOST: mc
+    volumes:
+    # mount the same volume used by server, but read-only
+    - mc:/data:ro
+    # use a host attached directory so that it in turn can be backed up
+    # to external/cloud storage
+    - ./mc-backups:/backups
+    # share network namespace with server to simplify rcon access
+    network_mode: "service:mc"
+
+volumes:
+  mc: {}
 ```
