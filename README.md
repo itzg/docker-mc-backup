@@ -18,7 +18,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `EXCLUDES`=\*.jar,cache,logs
 - `BACKUP_METHOD`=tar
 
-If `PRUNE_BACKUP_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
+If `PRUNE_BACKUPS_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
 
 If `BACKUP_INTERVAL` is set to 0 or smaller, script will run once and exit.
 
