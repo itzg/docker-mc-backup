@@ -13,6 +13,7 @@ fi
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic
 : "${PRUNE_BACKUPS_DAYS:=7}"
+: "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
 : "${RCON_PASSWORD:=minecraft}"
@@ -179,7 +180,7 @@ tar() {
 
 restic() {
   _delete_old_backups() {
-    command restic forget --tag "${restic_tags_filter}" --keep-within "${PRUNE_BACKUPS_DAYS}d" "${@}"
+    command restic forget --tag "${restic_tags_filter}" "${PRUNE_RESTIC_RETENTION}" "${@}"
   }
   _check() {
       if ! output="$(command restic check 2>&1)"; then

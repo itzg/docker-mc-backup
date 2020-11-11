@@ -12,6 +12,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `INITIAL_DELAY`=2m
 - `BACKUP_INTERVAL`=24h
 - `PRUNE_BACKUPS_DAYS`=7
+- `PRUNE_RESTIC_RETENTION`=--keep-within 7d
 - `RCON_HOST`=localhost
 - `RCON_PORT`=25575
 - `RCON_PASSWORD`=minecraft
@@ -44,6 +45,10 @@ Examples:
 See [restic documentation](https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html) on what variables are needed to be defined.
 At least one of `RESTIC_PASSWORD*` variables need to be defined, along with `RESTIC_REPOSITORY`.
 
+You can finetune the retention cycle of the restic backups using the `PRUNE_RESTIC_RETENTION` variable. Take a look at the [restic documentation](https://restic.readthedocs.io/en/latest/060_forget.html) for details.
+
+> **_EXAMPLE_**  
+> Setting `PRUNE_RESTIC_RETENTION` to `--keep-daily 7 --keep-weekly 5 --keep-monthly 12 --keep-yearly 75` will keep the most recent 7 daily snapshots, then 4 (remember, 7 dailies already include a week!) last-day-of-the-weeks and 11 or 12 last-day-of-the-months (11 or 12 depends if the 5 weeklies cross a month). And finally 75 last-day-of-the-year snapshots. All other snapshots are removed.
 
 :warning: | When using restic as your backup method, make sure that you fix your container hostname to a constant value! Otherwise, each time a container restarts it'll use a different, random hostname which will cause it not to rotate your backups created by previous instances!
 ---|---
