@@ -19,6 +19,7 @@ fi
 : "${RCON_PASSWORD:=minecraft}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
 : "${LINK_LATEST:=false}"
+: "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
 
 export RCON_HOST
 export RCON_PORT
@@ -217,15 +218,17 @@ restic() {
     fi
 
     # Used to construct tagging arguments and filters for snapshots
-    readonly restic_tags=(
-      "mc_backups"
-      "${BACKUP_NAME}"
-    )
+    restic_tags=(${RESTIC_ADDITIONAL_TAGS})
+    restic_tags+=("${BACKUP_NAME}")
+    readonly restic_tags
+    
     # Arguments to use to tag the snapshots with
     restic_tags_arguments=()
     local tag
     for tag in "${restic_tags[@]}"; do
-      restic_tags_arguments+=( --tag "${tag}" )
+        local tag_arg="--tag $tag"
+        echo $tag_arg
+        restic_tags_arguments+=("$tag_arg")
     done
     readonly restic_tags_arguments
     # Used for filtering backups to only match ours
