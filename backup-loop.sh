@@ -227,7 +227,6 @@ restic() {
     local tag
     for tag in "${restic_tags[@]}"; do
         local tag_arg="--tag $tag"
-        echo $tag_arg
         restic_tags_arguments+=("$tag_arg")
     done
     readonly restic_tags_arguments
