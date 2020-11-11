@@ -1,5 +1,6 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/itzg/mc-backup.svg)](https://hub.docker.com/r/itzg/mc-backup)
 [![Build Status](https://travis-ci.org/itzg/docker-mc-backup.svg?branch=master)](https://travis-ci.org/itzg/docker-mc-backup)
+[![Discord](https://img.shields.io/discord/660567679458869252?label=Discord&logo=discord)](https://discord.gg/DXfKpjB)
 
 Provides a side-car container to backup itzg/minecraft-server world data.
 
