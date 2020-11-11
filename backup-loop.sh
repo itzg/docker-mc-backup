@@ -13,11 +13,13 @@ fi
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic
 : "${PRUNE_BACKUPS_DAYS:=7}"
+: "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
 : "${RCON_PASSWORD:=minecraft}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
 : "${LINK_LATEST:=false}"
+: "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
 
 export RCON_HOST
 export RCON_PORT
@@ -179,7 +181,7 @@ tar() {
 
 restic() {
   _delete_old_backups() {
-    command restic forget --tag "${restic_tags_filter}" --keep-within "${PRUNE_BACKUPS_DAYS}d" "${@}"
+    command restic forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
   _check() {
       if ! output="$(command restic check 2>&1)"; then
@@ -216,15 +218,15 @@ restic() {
     fi
 
     # Used to construct tagging arguments and filters for snapshots
-    readonly restic_tags=(
-      "mc_backups"
-      "${BACKUP_NAME}"
-    )
+    restic_tags=(${RESTIC_ADDITIONAL_TAGS})
+    restic_tags+=("${BACKUP_NAME}")
+    readonly restic_tags
+    
     # Arguments to use to tag the snapshots with
     restic_tags_arguments=()
     local tag
     for tag in "${restic_tags[@]}"; do
-      restic_tags_arguments+=( --tag "${tag}" )
+        restic_tags_arguments+=( --tag "$tag")
     done
     readonly restic_tags_arguments
     # Used for filtering backups to only match ours
