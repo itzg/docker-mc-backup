@@ -181,7 +181,7 @@ tar() {
 
 restic() {
   _delete_old_backups() {
-    command restic forget --tag "${restic_tags_filter}" "${PRUNE_RESTIC_RETENTION}" "${@}"
+    command restic forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
   _check() {
       if ! output="$(command restic check 2>&1)"; then
@@ -226,8 +226,7 @@ restic() {
     restic_tags_arguments=()
     local tag
     for tag in "${restic_tags[@]}"; do
-        local tag_arg="--tag $tag"
-        restic_tags_arguments+=("$tag_arg")
+        restic_tags_arguments+=( --tag "$tag")
     done
     readonly restic_tags_arguments
     # Used for filtering backups to only match ours
