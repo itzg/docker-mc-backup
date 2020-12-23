@@ -2,7 +2,7 @@
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-FROM ${TARGETARCH}${TARGETVARIANT}/alpine AS builder
+FROM alpine AS builder
 
 RUN mkdir -p /opt
 
@@ -38,7 +38,7 @@ RUN mkdir -p /tmp/rclone && \
     chmod +x /opt/rclone
 
 
-FROM ${TARGETARCH}${TARGETVARIANT}/alpine
+FROM alpine
 
 RUN apk -U --no-cache add \
     bash \
