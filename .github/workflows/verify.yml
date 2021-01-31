@@ -54,3 +54,10 @@ jobs:
           INITIAL_DELAY: 0s
           RESTIC_PASSWORD: 1234
         run: ./tests/test.simple.restic.sh
+
+      - name: Test restic rclone handling
+        env:
+          RESTIC_REPOSITORY: rclone:/tmp/dest
+          INITIAL_DELAY: 0s
+          RESTIC_PASSWORD: 1234
+        run: ./tests/test.simple.restic.sh
