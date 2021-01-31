@@ -31,3 +31,10 @@ jobs:
           INITIAL_DELAY: 5s
           PRUNE_BACKUPS_DAYS: 3
         run: ./tests/test.simple.tar.sh
+
+      - name: Test restic handling
+        env:
+          RESTIC_REPOSITORY: /tmp/dest
+          INITIAL_DELAY: 0s
+          RESTIC_PASSWORD: 1234
+        run: ./tests/test.simple.restic.sh
