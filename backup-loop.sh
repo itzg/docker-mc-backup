@@ -218,7 +218,7 @@ restic() {
     fi
 
     # Used to construct tagging arguments and filters for snapshots
-    read -a restic_tags <<< ${RESTIC_ADDITIONAL_TAGS}
+    read -ra restic_tags <<< ${RESTIC_ADDITIONAL_TAGS}
     restic_tags+=("${BACKUP_NAME}")
     readonly restic_tags
 
