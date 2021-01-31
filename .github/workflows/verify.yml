@@ -1,0 +1,33 @@
+name: Verify
+
+on:
+  pull_request:
+    branches:
+      - multiarch
+
+jobs:
+  verify:
+    runs-on: ubuntu-20.04
+    env:
+      SRC_DIR: /tmp/source
+      DEST_DIR: /tmp/dest
+      BACKUP_INTERVAL: 0
+      EXCLUDES: '*.jar,exclude_dir'
+      RCON_PATH: /usr/bin/rcon-cli
+      DEBUG: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Lint script with shellcheck
+        run: /tests/lint.shellcheck.sh
+
+      - name: Lint dockerfile
+        run: ./tests/lint.hadolint.sh
+
+      - name: Test simple backup and exclusion scenario with tar
+        env:
+          EXTRACT_DIR: /tmp/extract
+          INITIAL_DELAY: 5s
+          PRUNE_BACKUPS_DAYS: 3
+        run: ./tests/test.simple.tar.sh
