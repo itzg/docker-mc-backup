@@ -47,7 +47,7 @@ timeout --kill-after=20 50 docker run --rm \
     --mount "type=bind,src=${LOCAL_SRC_DIR},dst=${SRC_DIR}" \
     --mount "type=bind,src=${LOCAL_DEST_DIR},dst=${DEST_DIR}" \
     --mount "type=bind,src=${TMP_DIR}/rcon-cli,dst=${RCON_PATH}" \
-    testimg
+    localhost:5000/itzg/mc-backup:latest
 
 restic() {
   docker run --rm \
@@ -56,7 +56,7 @@ restic() {
       --entrypoint=restic \
       --mount "type=bind,src=${LOCAL_SRC_DIR},dst=${SRC_DIR}" \
       --mount "type=bind,src=${LOCAL_DEST_DIR},dst=${DEST_DIR}" \
-      testimg "${@}"
+      localhost:5000/itzg/mc-backup:latest "${@}"
 }
 restic ls latest
 ! restic ls latest 2>/dev/null | grep -q "exclude_"
