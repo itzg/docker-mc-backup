@@ -22,7 +22,7 @@ RUN bunzip2 /tmp/restic.bz2 && \
     mv /tmp/restic /opt/restic && \
     chmod +x /opt/restic
 
-ARG DEMOTER_VERSION=0.3.0
+ARG DEMOTER_VERSION=0.3.1
 
 ADD https://github.com/itzg/entrypoint-demoter/releases/download/v${DEMOTER_VERSION}/entrypoint-demoter_${DEMOTER_VERSION}_Linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/entrypoint-demoter.tar.gz
 
