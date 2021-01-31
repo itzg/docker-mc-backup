@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Lint script with shellcheck
-        run: /tests/lint.shellcheck.sh
+        run: ./tests/lint.shellcheck.sh
 
       - name: Lint dockerfile
         run: ./tests/lint.hadolint.sh
