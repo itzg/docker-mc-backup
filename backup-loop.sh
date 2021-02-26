@@ -181,7 +181,8 @@ tar() {
 
 restic() {
   _delete_old_backups() {
-    command restic forget --tag "${restic_tags_filter}" "${PRUNE_RESTIC_RETENTION}" "${@}"
+    # shellcheck disable=SC2086
+    command restic forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
   _check() {
       if ! output="$(command restic check 2>&1)"; then

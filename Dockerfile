@@ -9,7 +9,8 @@ ARG RCON_CLI_VERSION=1.4.8
 
 ADD https://github.com/itzg/rcon-cli/releases/download/${RCON_CLI_VERSION}/rcon-cli_${RCON_CLI_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/rcon-cli.tar.gz
 
-RUN tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
+RUN mkdir -p /opt && \
+    tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
     chmod +x /opt/rcon-cli
 
 ARG RESTIC_VERSION=0.11.0
