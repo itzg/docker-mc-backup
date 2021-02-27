@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    environment:
+      EULA: "TRUE"
+    ports:
+      - 25565:25565
+    volumes:
+      - mc:/data
+  backup:
+    image: itzg/mc-backup
+    environment:
+      RCON_HOST: mc
+      BACKUP_METHOD: restic
+      RESTIC_PASSWORD: password
+      RESTIC_REPOSITORY: rclone:CFG_NAME:BUCKET_NAME
+    volumes:
+      # mount volume pre-configured using
+      # docker run -v rclone-config:/config/rclone rclone/rclone config
+      - rclone-config:/config/rclone
+      - mc:/data:ro
+      - backups:/backup
+
+volumes:
+  rclone-config:
+    # declared external since it is created by one-off docker run usage
+    external: true
+  mc: {}
+  backups: {}
