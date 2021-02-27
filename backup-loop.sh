@@ -20,10 +20,12 @@ fi
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
+: "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 
 export RCON_HOST
 export RCON_PORT
 export RCON_PASSWORD
+export XDG_CONFIG_HOME
 
 ###############
 ##  common   ##
