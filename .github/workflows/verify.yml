@@ -1,12 +1,9 @@
 name: Verify
 
 on:
-  push:
-    branches:
-      - multiarch
   pull_request:
     branches:
-      - multiarch
+      - master
 
 jobs:
   verify:
