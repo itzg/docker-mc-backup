@@ -136,3 +136,51 @@ services:
 volumes:
   mc: {}
 ```
+
+### Restic with rclone
+
+Setup the rclone configuration for the desired remote location
+```shell
+docker run -it --rm -v rclone-config:/config/rclone rclone/rclone config
+```
+
+Setup the `itzg/mc-backup` container with the following specifics
+- Set `BACKUP_METHOD` to `restic`
+- Set `RESTIC_PASSWORD` to a restic backup repository password to use
+- Use `rclone:` as the prefix on the `RESTIC_REPOSITORY`
+- Append the rclone config name, colon (`:`), and specific sub-path for the config type
+
+In the following example `CFG_NAME` and `BUCKET_NAME` need to be changed to specifics for the rclone configuration you created:
+```yaml
+version: "3"
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    environment:
+      EULA: "TRUE"
+    ports:
+      - 25565:25565
+    volumes:
+      - mc:/data
+  backup:
+    image: itzg/mc-backup
+    environment:
+      RCON_HOST: mc
+      BACKUP_METHOD: restic
+      RESTIC_PASSWORD: password
+      RESTIC_REPOSITORY: rclone:CFG_NAME:BUCKET_NAME
+    volumes:
+      # mount volume pre-configured using
+      # docker run -v rclone-config:/config/rclone rclone/rclone config
+      - rclone-config:/config/rclone
+      - mc:/data:ro
+      - backups:/backup
+
+volumes:
+  rclone-config:
+    # declared external since it is created by one-off docker run usage
+    external: true
+  mc: {}
+  backups: {}
+```

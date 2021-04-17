@@ -45,7 +45,8 @@ FROM alpine
 RUN apk -U --no-cache add \
     bash \
     coreutils \
-    openssh-client
+    openssh-client \
+    tzdata
 
 
 COPY --from=builder /opt/rcon-cli /opt/rcon-cli
