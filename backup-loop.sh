@@ -199,6 +199,7 @@ tar() {
 
 restic() {
   _delete_old_backups() {
+    # shellcheck disable=SC2086
     command restic forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
   _check() {
@@ -236,10 +237,10 @@ restic() {
     fi
 
     # Used to construct tagging arguments and filters for snapshots
-    restic_tags=(${RESTIC_ADDITIONAL_TAGS})
+    read -ra restic_tags <<< ${RESTIC_ADDITIONAL_TAGS}
     restic_tags+=("${BACKUP_NAME}")
     readonly restic_tags
-    
+
     # Arguments to use to tag the snapshots with
     restic_tags_arguments=()
     local tag

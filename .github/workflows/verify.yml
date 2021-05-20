@@ -1,0 +1,63 @@
+name: Verify
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  verify:
+    runs-on: ubuntu-20.04
+    env:
+      SRC_DIR: /tmp/source
+      DEST_DIR: /tmp/dest
+      BACKUP_INTERVAL: 0
+      EXCLUDES: '*.jar,exclude_dir'
+      RCON_PATH: /usr/bin/rcon-cli
+      DEBUG: true
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Lint script with shellcheck
+        run: ./tests/lint.shellcheck.sh
+
+      - name: Lint dockerfile
+        run: ./tests/lint.hadolint.sh
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver-opts: network=host
+
+      - name: Build and push to local registry
+        uses: docker/build-push-action@v2.4.0
+        with:
+          push: true
+          tags: localhost:5000/itzg/mc-backup:latest
+
+      - name: Test simple backup and exclusion scenario with tar
+        env:
+          EXTRACT_DIR: /tmp/extract
+          INITIAL_DELAY: 5s
+          PRUNE_BACKUPS_DAYS: 3
+        run: ./tests/test.simple.tar.sh
+
+      - name: Test restic handling
+        env:
+          RESTIC_REPOSITORY: /tmp/dest
+          INITIAL_DELAY: 0s
+          RESTIC_PASSWORD: 1234
+        run: ./tests/test.simple.restic.sh
+
+      - name: Test restic rclone handling
+        env:
+          RESTIC_REPOSITORY: rclone:/tmp/dest
+          INITIAL_DELAY: 0s
+          RESTIC_PASSWORD: 1234
+        run: ./tests/test.simple.restic.sh
