@@ -39,8 +39,11 @@ Examples:
 
 - `DEST_DIR`=/backups
 - `LINK_LATEST`=false
+- `TAR_COMPRESS_METHOD`=gzip
 
 `LINK_LATEST` is a true/false flag that creates a symbolic link to the latest backup.
+
+`TAR_COMPRESS_METHOD` is the compression method used by tar. Valid value: gzip bzip2 
 
 ##### `restic` backup method
 
