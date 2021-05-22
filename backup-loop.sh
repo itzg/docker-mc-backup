@@ -12,6 +12,7 @@ fi
 : "${INITIAL_DELAY:=2m}"
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic
+: "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip
 : "${PRUNE_BACKUPS_DAYS:=7}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
 : "${RCON_HOST:=localhost}"
@@ -160,13 +161,28 @@ tar() {
 
   init() {
     mkdir -p "${DEST_DIR}"
-    readonly backup_extension="tgz"
+    case "${TAR_COMPRESS_METHOD}" in
+        gzip)
+        readonly tar_parameter="gzip"
+        readonly backup_extension="tgz"
+        ;;
+
+        bzip2)
+        readonly tar_parameter="bzip2"
+        readonly backup_extension="bz2"
+        ;;
+
+        *)
+        log ERROR 'TAR_COMPRESS_METHOD is not valid!'
+        exit 1
+        ;;
+    esac
   }
   backup() {
     ts=$(date -u +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" -czf "${outFile}" -C "${SRC_DIR}" .
+    command tar "${excludes[@]}" -c  --${tar_parameter} -f "${outFile}" -C "${SRC_DIR}" .
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
       ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
     fi
