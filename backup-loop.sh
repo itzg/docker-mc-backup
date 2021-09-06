@@ -18,6 +18,8 @@ fi
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
 : "${RCON_PASSWORD:=minecraft}"
+: "${RCON_RETRIES:=5}"
+: "${RCON_RETRY_INTERVAL:=10s}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
@@ -299,23 +301,22 @@ log INFO "waiting initial delay of ${INITIAL_DELAY}..."
 sleep ${INITIAL_DELAY}
 
 log INFO "waiting for rcon readiness..."
-# 20 times, 10 second delay
-retry 20 10s rcon-cli save-on
+retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
 
 
 while true; do
 
-  if retry 5 10s rcon-cli save-off; then
+  if retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-off; then
     # No matter what we were doing, from now on if the script crashes
     # or gets shut down, we want to make sure saving is on
     trap 'retry 5 5s rcon-cli save-on' EXIT
 
-    retry 5 10s rcon-cli save-all
-    retry 5 10s sync
+    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all
+    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
 
     "${BACKUP_METHOD}" backup
 
-    retry 20 10s rcon-cli save-on
+    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
     # Remove our exit trap now
     trap EXIT
   else

@@ -17,6 +17,8 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `RCON_HOST`=localhost
 - `RCON_PORT`=25575
 - `RCON_PASSWORD`=minecraft
+- `RCON_RETRIES`=5 : Set to a negative value to retry indefinitely
+- `RCON_RETRY_INTERVAL`=10s
 - `EXCLUDES`=\*.jar,cache,logs
 - `BACKUP_METHOD`=tar
 - `RESTIC_ADDITIONAL_TAGS`=mc_backups
