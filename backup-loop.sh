@@ -24,6 +24,7 @@ fi
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
+: "${ONE_SHOT:=false}"
 
 export RCON_HOST
 export RCON_PORT
@@ -34,6 +35,14 @@ export XDG_CONFIG_HOME
 ##  common   ##
 ## functions ##
 ###############
+
+is_one_shot() {
+  if [[ ${ONE_SHOT^^} = TRUE ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
 
 is_elem_in_array() {
   # $1 = element
@@ -273,6 +282,8 @@ restic() {
 ## main ##
 ##########
 
+
+
 if [ -n "${INTERVAL_SEC:-}" ]; then
   log WARN 'INTERVAL_SEC is deprecated. Use BACKUP_INTERVAL instead'
 fi
@@ -296,9 +307,11 @@ done
 
 "${BACKUP_METHOD}" init
 
-log INFO "waiting initial delay of ${INITIAL_DELAY}..."
-# shellcheck disable=SC2086
-sleep ${INITIAL_DELAY}
+if ! is_one_shot; then
+  log INFO "waiting initial delay of ${INITIAL_DELAY}..."
+  # shellcheck disable=SC2086
+  sleep ${INITIAL_DELAY}
+fi
 
 log INFO "waiting for rcon readiness..."
 retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
@@ -326,6 +339,10 @@ while true; do
 
   if (( PRUNE_BACKUPS_DAYS > 0 )); then
     "${BACKUP_METHOD}" prune
+  fi
+
+  if is_one_shot; then
+    break
   fi
 
   # If BACKUP_INTERVAL is not a valid number (i.e. 24h), we want to sleep.

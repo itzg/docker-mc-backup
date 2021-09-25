@@ -70,9 +70,9 @@ RUN ln -s /opt/rclone /usr/bin
 
 
 COPY backup-loop.sh /opt/
+COPY backup /usr/bin/
 
-RUN chmod +x /opt/backup-loop.sh
-
+RUN chmod +x /opt/backup-loop.sh /usr/bin/backup
 
 VOLUME ["/data", "/backups"]
 
@@ -83,4 +83,4 @@ ENV HOME=/tmp
 
 ENTRYPOINT ["/opt/entrypoint-demoter", "--match", "/backups"]
 
-CMD ["/opt/backup-loop.sh"]
+CMD ["backup","loop"]

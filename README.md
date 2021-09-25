@@ -22,6 +22,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `EXCLUDES`=\*.jar,cache,logs
 - `BACKUP_METHOD`=tar
 - `RESTIC_ADDITIONAL_TAGS`=mc_backups
+- `TZ` : Can be set to the timezone to use for logging
 
 If `PRUNE_BACKUPS_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
 
@@ -74,6 +75,20 @@ You can finetune the retention cycle of the restic backups using the `PRUNE_REST
   Should be attached read-only to the same volume as the `/data` of the `itzg/minecraft-server` container
 - `/backups` :
   The volume where incremental tgz files will be created, if using tar backup method.
+
+## On-demand backups
+
+If you would like to kick off a backup prior to the next backup interval, you can `exec` the command `backup now` within the running backup container. For example, using the [Docker Compose example](examples/docker-compose.yml) where the service name is `backups`, the exec command becomes:
+
+```shell
+docker-compose exec backups backup now
+```
+
+This mechanism can also be used to avoid a long running container completely by running a temporary container, such as:
+
+```shell
+docker run --rm ...data and backup -v args... itzg/mc-backup backup now
+```
 
 ## Example
 

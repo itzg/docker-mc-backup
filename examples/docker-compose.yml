@@ -7,6 +7,8 @@ services:
       - 25565:25565
     environment:
       EULA: "TRUE"
+      # since PAPER starts up faster than vanilla
+      TYPE: PAPER
     volumes:
       - mc:/data
   backups:
