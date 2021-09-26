@@ -12,8 +12,10 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `BACKUP_NAME`=world
 - `INITIAL_DELAY`=2m
 - `BACKUP_INTERVAL`=24h
+- `PAUSE_IF_NO_PLAYERS`=false
 - `PRUNE_BACKUPS_DAYS`=7
 - `PRUNE_RESTIC_RETENTION`=--keep-within 7d
+- `SERVER_PORT`=25565
 - `RCON_HOST`=localhost
 - `RCON_PORT`=25575
 - `RCON_PASSWORD`=minecraft
@@ -35,6 +37,10 @@ Examples:
 - `BACKUP_INTERVAL`="1.5d" -> backup every one and a half days (36 hours)
 - `BACKUP_INTERVAL`="2h 30m" -> backup every two and a half hours
 - `INITIAL_DELAY`="120" -> wait 2 minutes before starting
+
+The `PAUSE_IF_NO_PLAYERS` option lets you pause backups if no players are online.
+
+If `PAUSE_IF_NO_PLAYERS`="true" and there are no players online after a backup is made, then instead of immediately scheduling the next backup, the script will start checking the server's player count every minute. Once a player joins the server, the next backup will be scheduled in `BACKUP_INTERVAL`.
 
 `EXCLUDES` is a comma-separated list of glob(3) patterns to exclude from backups. By default excludes all jar files (plugins, server files), logs folder and cache (used by i.e. PaperMC server).
 

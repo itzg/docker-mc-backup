@@ -5,13 +5,21 @@ FROM alpine AS builder
 ARG TARGETARCH
 ARG TARGETVARIANT
 
+RUN mkdir -p /opt
+
 ARG RCON_CLI_VERSION=1.4.8
 
 ADD https://github.com/itzg/rcon-cli/releases/download/${RCON_CLI_VERSION}/rcon-cli_${RCON_CLI_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/rcon-cli.tar.gz
 
-RUN mkdir -p /opt && \
-    tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
+RUN tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
     chmod +x /opt/rcon-cli
+
+ARG MC_MONITOR_VERSION=0.10.0
+
+ADD https://github.com/itzg/mc-monitor/releases/download/${MC_MONITOR_VERSION}/mc-monitor_${MC_MONITOR_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/mc-monitor.tar.gz
+
+RUN tar x -f /tmp/mc-monitor.tar.gz -C /opt/ && \
+    chmod +x /opt/mc-monitor
 
 ARG RESTIC_VERSION=0.11.0
 
@@ -52,6 +60,11 @@ RUN apk -U --no-cache add \
 COPY --from=builder /opt/rcon-cli /opt/rcon-cli
 
 RUN ln -s /opt/rcon-cli /usr/bin
+
+
+COPY --from=builder /opt/mc-monitor /opt/mc-monitor
+
+RUN ln -s /opt/mc-monitor /usr/bin
 
 
 COPY --from=builder /opt/restic /opt/restic
