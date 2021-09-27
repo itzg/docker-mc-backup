@@ -11,10 +11,12 @@ fi
 : "${BACKUP_NAME:=world}"
 : "${INITIAL_DELAY:=2m}"
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
+: "${PAUSE_IF_NO_PLAYERS:=false}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic
 : "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip
 : "${PRUNE_BACKUPS_DAYS:=7}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
+: "${SERVER_PORT:=25565}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
 : "${RCON_PASSWORD:=minecraft}"
@@ -349,9 +351,23 @@ while true; do
   # Only raw numeric value <= 0 will break
   if (( BACKUP_INTERVAL <= 0 )) &>/dev/null; then
     break
-  else
-    log INFO "sleeping ${BACKUP_INTERVAL}..."
-    # shellcheck disable=SC2086
-    sleep ${BACKUP_INTERVAL}
   fi
+  
+  if [[ ${PAUSE_IF_NO_PLAYERS^^} = TRUE ]]; then
+    while true; do
+      if ! PLAYERS_ONLINE=$(mc-monitor status --host "${RCON_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
+        log ERROR "Error querying the server, waiting 1 minute..."
+        sleep 1m
+      elif [ ${PLAYERS_ONLINE} = 0 ]; then
+        log INFO "No players online, waiting 1 minute..."
+        sleep 1m
+      else
+        break
+      fi
+    done
+  fi
+  
+  log INFO "sleeping ${BACKUP_INTERVAL}..."
+  # shellcheck disable=SC2086
+  sleep ${BACKUP_INTERVAL}
 done
