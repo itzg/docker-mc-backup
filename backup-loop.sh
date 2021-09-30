@@ -272,7 +272,7 @@ restic() {
   prune() {
     # We cannot use `grep -q` here - see https://github.com/restic/restic/issues/1466
     if _delete_old_backups --dry-run | grep '^remove [[:digit:]]* snapshots:$' >/dev/null; then
-      log INFO "Forgetting snapshots older than ${PRUNE_BACKUPS_DAYS} days"
+      log INFO "Pruning snapshots using ${PRUNE_RESTIC_RETENTION}"
       _delete_old_backups --prune | log INFO
       _check | log INFO
     fi
