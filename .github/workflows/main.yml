@@ -14,6 +14,8 @@ jobs:
 
       - name: ShellCheck
         uses: ludeeus/action-shellcheck@1.1.0
+        with:
+          ignore: tests
 
       - name: Hadolint Action
         uses: hadolint/hadolint-action@v1.6.0
