@@ -21,7 +21,7 @@ ADD https://github.com/itzg/mc-monitor/releases/download/${MC_MONITOR_VERSION}/m
 RUN tar x -f /tmp/mc-monitor.tar.gz -C /opt/ && \
     chmod +x /opt/mc-monitor
 
-ARG RESTIC_VERSION=0.11.0
+ARG RESTIC_VERSION=0.12.1
 
 # NOTE: restic releases don't differentiate arm v6 from v7, so TARGETVARIANT is not used
 # and have to assume they release armv7
