@@ -12,6 +12,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@1.1.0
+
+      - name: Hadolint Action
+        uses: hadolint/hadolint-action@v1.6.0
+
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
 
