@@ -359,7 +359,7 @@ while true; do
       if ! PLAYERS_ONLINE=$(mc-monitor status --host "${RCON_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
         log ERROR "Error querying the server, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
-      elif [ ${PLAYERS_ONLINE} = 0 ]; then
+      elif [ "${PLAYERS_ONLINE}" = 0 ]; then
         log INFO "No players online, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
       else
