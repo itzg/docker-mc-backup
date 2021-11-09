@@ -4,7 +4,7 @@ services:
   mc:
     image: itzg/minecraft-server
     ports:
-      - 25565:25565
+      - "25565:25565"
     environment:
       EULA: "TRUE"
       # since PAPER starts up faster than vanilla

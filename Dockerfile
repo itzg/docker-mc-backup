@@ -7,7 +7,7 @@ ARG TARGETVARIANT
 
 RUN mkdir -p /opt
 
-ARG RCON_CLI_VERSION=1.4.8
+ARG RCON_CLI_VERSION=1.5.1
 
 ADD https://github.com/itzg/rcon-cli/releases/download/${RCON_CLI_VERSION}/rcon-cli_${RCON_CLI_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/rcon-cli.tar.gz
 
