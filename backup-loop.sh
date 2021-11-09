@@ -150,7 +150,7 @@ call_if_function_exists() {
   fi
   function_name="${1}"
   if is_function "${function_name}"; then
-    eval "${@}"
+    "${@}"
   else
     log INTERNALERROR "${function_name} is not a valid function!"
     return 2
