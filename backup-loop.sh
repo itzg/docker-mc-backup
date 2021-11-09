@@ -28,6 +28,8 @@ fi
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
+: "${TZ:=Etc/UTC}"
+export TZ
 
 export RCON_HOST
 export RCON_PORT
@@ -193,7 +195,7 @@ tar() {
     esac
   }
   backup() {
-    ts=$(date -u +"%Y%m%d-%H%M%S")
+    ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     command tar "${excludes[@]}" -c  --${tar_parameter} -f "${outFile}" -C "${SRC_DIR}" .
