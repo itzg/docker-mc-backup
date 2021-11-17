@@ -54,7 +54,9 @@ RUN apk -U --no-cache add \
     bash \
     coreutils \
     openssh-client \
-    tzdata
+    tar \
+    tzdata \
+    zstd
 
 
 COPY --from=builder /opt/rcon-cli /opt/rcon-cli

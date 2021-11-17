@@ -14,7 +14,8 @@ fi
 : "${PAUSE_IF_NO_PLAYERS:=false}"
 : "${PLAYERS_ONLINE_CHECK_INTERVAL:=5m}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic
-: "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip
+: "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip zstd
+: "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
 : "${SERVER_PORT:=25565}"
@@ -179,13 +180,18 @@ tar() {
     mkdir -p "${DEST_DIR}"
     case "${TAR_COMPRESS_METHOD}" in
         gzip)
-        readonly tar_parameter="gzip"
+        readonly tar_parameters=("--gzip")
         readonly backup_extension="tgz"
         ;;
 
         bzip2)
-        readonly tar_parameter="bzip2"
+        readonly tar_parameters=("--bzip2")
         readonly backup_extension="bz2"
+        ;;
+
+        zstd)
+        readonly tar_parameters=("--use-compress-program" "zstd ${ZSTD_PARAMETERS}")
+        readonly backup_extension="tar.zst"
         ;;
 
         *)
@@ -198,7 +204,7 @@ tar() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" -c  --${tar_parameter} -f "${outFile}" -C "${SRC_DIR}" .
+    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" .
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
       ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
     fi
