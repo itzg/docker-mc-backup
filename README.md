@@ -49,10 +49,13 @@ If `PAUSE_IF_NO_PLAYERS`="true" and there are no players online after a backup i
 - `DEST_DIR`=/backups
 - `LINK_LATEST`=false
 - `TAR_COMPRESS_METHOD`=gzip
+- `ZSTD_PARAMETERS`=-3 --long=25 --single-thread
 
 `LINK_LATEST` is a true/false flag that creates a symbolic link to the latest backup.
 
-`TAR_COMPRESS_METHOD` is the compression method used by tar. Valid value: gzip bzip2 
+`TAR_COMPRESS_METHOD` is the compression method used by tar. Valid value: gzip bzip2 zstd
+
+`ZSTD_PARAMETERS` sets the parameters for `zstd` compression. The `--long` parameter affects RAM requirements for both compression and decompression (the default of 25 means 2^25 bytes = 32 MB).
 
 ##### `restic` backup method
 
