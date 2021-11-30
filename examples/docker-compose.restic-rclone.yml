@@ -17,15 +17,18 @@ services:
       RESTIC_PASSWORD: password
       RESTIC_REPOSITORY: rclone:CFG_NAME:BUCKET_NAME
     volumes:
-      # mount volume pre-configured using
-      # docker run -v rclone-config:/config/rclone rclone/rclone config
-      - rclone-config:/config/rclone
+      # mount volume pre-configured using a host mounted file
+      - ./rclone.conf:/config/rclone/
+      # or configure one into a named volume using
+      # docker run -it --rm -v rclone-config:/config/rclone rclone/rclone config
+      # and change the above to
+      # - rclone-config:/config/rclone
       - mc:/data:ro
       - backups:/backup
 
 volumes:
-  rclone-config:
-    # declared external since it is created by one-off docker run usage
-    external: true
+  # Uncomment this if using the config step above
+  #  rclone-config:
+  #    external: true
   mc: {}
   backups: {}

@@ -38,7 +38,7 @@ ADD https://github.com/itzg/entrypoint-demoter/releases/download/v${DEMOTER_VERS
 RUN tar x -f /tmp/entrypoint-demoter.tar.gz -C /opt/ && \
     chmod +x /opt/entrypoint-demoter
 
-ARG RCLONE_VERSION=1.53.3
+ARG RCLONE_VERSION=1.57.0
 
 ADD https://downloads.rclone.org/v${RCLONE_VERSION}/rclone-v${RCLONE_VERSION}-linux-${TARGETARCH}.zip /tmp/rclone.zip
 
