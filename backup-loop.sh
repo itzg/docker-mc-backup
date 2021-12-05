@@ -335,7 +335,7 @@ while true; do
     # or gets shut down, we want to make sure saving is on
     trap 'retry 5 5s rcon-cli save-on' EXIT
 
-    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all
+    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
 
     "${BACKUP_METHOD}" backup
