@@ -205,7 +205,11 @@ tar() {
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
+    if [ ${exitCode:-0} -eq 1 ]; then
+      log WARN "tar exited with code 1. Ignoring"
+    fi
     if [ ${exitCode:-0} -gt 1 ]; then
+      log ERROR "tar exited with code ${exitCode}! Aborting"
       exit 1
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
