@@ -205,7 +205,7 @@ tar() {
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
-    if [ $exitCode -gt 1 ]; then
+    if [ ${exitCode:-0} -gt 1 ]; then
       exit 1
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
