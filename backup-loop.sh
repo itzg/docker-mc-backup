@@ -30,6 +30,9 @@ fi
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
 : "${TZ:=Etc/UTC}"
+: "${RCLONE_REPOSITORY:={DEST_DIR}"
+: "${RCLONE_COMPRESS_METHOD:=gzip}"
+: "${RCLONE_REMOTE:=}"
 export TZ
 
 export RCON_HOST
@@ -291,6 +294,65 @@ restic() {
       log INFO "Pruning snapshots using ${PRUNE_RESTIC_RETENTION}"
       _delete_old_backups --prune | log INFO
       _check | log INFO
+    fi
+  }
+  call_if_function_exists "${@}"
+}
+
+rclone() {
+  _find_old_backups() {
+    command rclone lsf --format "tp" "${RCLONE_REMOTE}:${DEST_DIR}" | grep ${BACKUP_NAME} | awk \
+            -v DESTINATION="${DEST_DIR}" \
+            -v PRUNE_DATE="$(date '+%Y-%m-%d %H:%M:%S' --date="${PRUNE_BACKUPS_DAYS} days ago")" \
+            'BEGIN { FS=";" } $1 < PRUNE_DATE { printf "%s/%s\n", DESTINATION, $2 }'
+  }
+  init() {
+    # Check if rclone is installed and configured correctly
+    mkdir -p "${DEST_DIR}"
+    case "${RCLONE_COMPRESS_METHOD}" in
+        gzip)
+        readonly tar_parameters=("--gzip")
+        readonly backup_extension="tgz"
+        ;;
+
+        bzip2)
+        readonly tar_parameters=("--bzip2")
+        readonly backup_extension="bz2"
+        ;;
+
+        zstd)
+        readonly tar_parameters=("--use-compress-program" "zstd ${ZSTD_PARAMETERS}")
+        readonly backup_extension="tar.zst"
+        ;;
+
+        *)
+        log ERROR 'RCLONE_COMPRESS_METHOD is not valid!'
+        exit 1
+        ;;
+    esac
+  }
+  backup() {
+    ts=$(date +"%Y%m%d-%H%M%S")
+    outFile="${BACKUP_NAME}-${ts}.${backup_extension}"
+    log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
+    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
+    if [ ${exitCode:-0} -eq 1 ]; then
+      log WARN "tar exited with code 1. Ignoring"
+    fi
+    if [ ${exitCode:-0} -gt 1 ]; then
+      log ERROR "tar exited with code ${exitCode}! Aborting"
+      exit 1
+    fi
+
+    command rclone copy "${outFile}" "${RCLONE_REMOTE}:${DEST_DIR}"
+    rm "${outFile}"
+  }
+  prune() {
+    if [ -n "$(_find_old_backups)" ]; then
+      log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
+      _find_old_backups | tee \
+            >(awk '{ printf "Removing %s\n", $0 }' | log INFO) \
+            >(while read -r path; do command rclone purge "${path}"; done)
     fi
   }
   call_if_function_exists "${@}"
