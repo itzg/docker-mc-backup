@@ -30,7 +30,6 @@ fi
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
 : "${TZ:=Etc/UTC}"
-: "${RCLONE_REPOSITORY:={DEST_DIR}"
 : "${RCLONE_COMPRESS_METHOD:=gzip}"
 : "${RCLONE_REMOTE:=}"
 export TZ
