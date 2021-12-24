@@ -78,6 +78,40 @@ You can finetune the retention cycle of the restic backups using the `PRUNE_REST
 :warning: | SFTP restic backend is not directly supported. Please use RCLONE backend with SFTP support.
 ---|---
 
+##### `rclone` backup method
+Rclone acts as the `tar` backup method but automatically moves the compressed files to a remote drive via [rclone](https://rclone.org/).
+
+There are a few special environment variables for the rclone method.
+
+- `RCLONE_REMOTE` is the name of the remote you've configured in your rclone.conf, see [remote setup](https://rclone.org/remote_setup/).
+- `RCLONE_COMPRESS_METHOD`=gzip
+- `DEST_DIR` acts as the directory on the remote. Files are not stored locally when using rclone.
+
+Other parameters such as `PRUNE_BACKUPS_DAYS`, `ZSTD_PARAMETERS`, and `BACKUP_NAME` are all used as well.
+
+**Note** that you will need to place your rclone config file in `/config/rclone/rclone.conf`.
+This can be done by adding it through docker-compose,
+
+```yaml
+- ./rclone.config:/config/rclone/rclone.conf:ro
+```
+or by running the config wizard in a container and mounting the volume.
+```shell
+docker run -it --rm -v rclone-config:/config/rclone rclone/rclone config
+```
+
+then you must bind the volume **for the mc-backup process**
+```yaml
+volumes:
+  - rclone-config:/config/rclone
+```
+**and the service**
+```yaml
+volumes:
+  rclone-config:
+    external: true
+```
+
 ## Volumes
 
 - `/data` :
