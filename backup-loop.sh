@@ -301,8 +301,8 @@ restic() {
 rclone() {
   _find_old_backups() {
     command rclone lsf --format "tp" "${RCLONE_REMOTE}:${DEST_DIR}" | grep ${BACKUP_NAME} | awk \
-            -v DESTINATION="${DEST_DIR}" \
             -v PRUNE_DATE="$(date '+%Y-%m-%d %H:%M:%S' --date="${PRUNE_BACKUPS_DAYS} days ago")" \
+            -v DESTINATION="${DEST_DIR%/}" \
             'BEGIN { FS=";" } $1 < PRUNE_DATE { printf "%s/%s\n", DESTINATION, $2 }'
   }
   init() {
@@ -351,7 +351,7 @@ rclone() {
       log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
       _find_old_backups | tee \
             >(awk '{ printf "Removing %s\n", $0 }' | log INFO) \
-            >(while read -r path; do command rclone purge "${path}"; done)
+            >(while read -r path; do command rclone deletefile "${RCLONE_REMOTE}:${path}"; done)
     fi
   }
   call_if_function_exists "${@}"
