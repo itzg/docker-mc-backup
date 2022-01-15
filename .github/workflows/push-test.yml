@@ -1,4 +1,4 @@
-name: Build
+name: Push image for testing
 
 on:
   push:
