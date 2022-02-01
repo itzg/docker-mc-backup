@@ -1,9 +1,9 @@
-name: Build
+name: Push image for testing
 
 on:
   push:
     branches:
-      - master
+      - test/**
 
 jobs:
   build:
@@ -11,14 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.0
-
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@1.1.0
-        with:
-          ignore: tests
-
-      - name: Hadolint Action
-        uses: hadolint/hadolint-action@v1.6.0
 
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
@@ -38,11 +30,9 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: itzg/mc-backup
-          flavor: |
-            latest=true
 
       - name: Build and push
-        uses: docker/build-push-action@v2.8.0
+        uses: docker/build-push-action@v2.7.0
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7
