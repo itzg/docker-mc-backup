@@ -90,6 +90,7 @@ COPY backup /usr/bin/
 RUN chmod +x /opt/backup-loop.sh /usr/bin/backup
 
 VOLUME ["/data", "/backups"]
+WORKDIR "/backups"
 
 # Workaround for some tools (i.e. RCLONE) creating cache files in $HOME
 # and not having permissions to write when demoter does demote to UID,
