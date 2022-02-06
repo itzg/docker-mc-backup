@@ -32,6 +32,7 @@ fi
 : "${TZ:=Etc/UTC}"
 : "${RCLONE_COMPRESS_METHOD:=gzip}"
 : "${RCLONE_REMOTE:=}"
+: "${RCLONE_DEST_DIR:=}"
 export TZ
 
 export RCON_HOST
@@ -300,9 +301,9 @@ restic() {
 
 rclone() {
   _find_old_backups() {
-    command rclone lsf --format "tp" "${RCLONE_REMOTE}:${DEST_DIR}" | grep ${BACKUP_NAME} | awk \
+    command rclone lsf --format "tp" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}" | grep ${BACKUP_NAME} | awk \
             -v PRUNE_DATE="$(date '+%Y-%m-%d %H:%M:%S' --date="${PRUNE_BACKUPS_DAYS} days ago")" \
-            -v DESTINATION="${DEST_DIR%/}" \
+            -v DESTINATION="${RCLONE_DEST_DIR%/}" \
             'BEGIN { FS=";" } $1 < PRUNE_DATE { printf "%s/%s\n", DESTINATION, $2 }'
   }
   init() {
@@ -332,7 +333,7 @@ rclone() {
   }
   backup() {
     ts=$(date +"%Y%m%d-%H%M%S")
-    outFile="${BACKUP_NAME}-${ts}.${backup_extension}"
+    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
     if [ ${exitCode:-0} -eq 1 ]; then
@@ -343,7 +344,7 @@ rclone() {
       exit 1
     fi
 
-    command rclone copy "${outFile}" "${RCLONE_REMOTE}:${DEST_DIR}"
+    command rclone copy "${outFile}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
     rm "${outFile}"
   }
   prune() {
