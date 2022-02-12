@@ -1,12 +1,14 @@
 #!/bin/bash
 
+args=(/opt/entrypoint-demoter --match /backups)
+
 case "$1" in
   now)
-    ONE_SHOT=true exec /opt/backup-loop.sh ;;
+    ONE_SHOT=true exec "${args[@]}" /opt/backup-loop.sh ;;
   loop)
-    ONE_SHOT=false exec /opt/backup-loop.sh ;;
+    ONE_SHOT=false exec "${args[@]}" /opt/backup-loop.sh ;;
   *)
-    echo "Uknown backup mode. Use now or loop"
+    echo "Unknown backup mode or argument. Use now or loop"
     exit 1
     ;;
 esac

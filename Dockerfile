@@ -97,6 +97,6 @@ WORKDIR "/backups"
 # while keeping the $HOME=/root
 ENV HOME=/tmp
 
-ENTRYPOINT ["/opt/entrypoint-demoter", "--match", "/backups"]
+ENTRYPOINT ["/usr/bin/backup"]
 
-CMD ["backup","loop"]
+CMD ["loop"]
