@@ -30,7 +30,7 @@ jobs:
           ignore: tests
 
       - name: Hadolint Action
-        uses: hadolint/hadolint-action@v1.6.0
+        uses: hadolint/hadolint-action@v2.0.0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
