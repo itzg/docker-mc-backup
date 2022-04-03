@@ -85,7 +85,8 @@ There are a few special environment variables for the rclone method.
 
 - `RCLONE_REMOTE` is the name of the remote you've configured in your rclone.conf, see [remote setup](https://rclone.org/remote_setup/).
 - `RCLONE_COMPRESS_METHOD`=gzip
-- `DEST_DIR` acts as the directory on the remote. Files are not stored locally when using rclone.
+- `DEST_DIR`=/backups is the container path where the archive is temporarily created
+- `RCLONE_DEST_DIR` is the directory on the remote
 
 Other parameters such as `PRUNE_BACKUPS_DAYS`, `ZSTD_PARAMETERS`, and `BACKUP_NAME` are all used as well.
 
