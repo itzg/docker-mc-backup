@@ -21,6 +21,7 @@ fi
 : "${SERVER_PORT:=25565}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
+: "${RCON_PASSWORD_FILE:=}"
 : "${RCON_PASSWORD:=minecraft}"
 : "${RCON_RETRIES:=5}"
 : "${RCON_RETRY_INTERVAL:=10s}"
@@ -362,7 +363,18 @@ rclone() {
 ## main ##
 ##########
 
-
+if [[ $RCON_PASSWORD_FILE ]]; then
+  if [ ! -e ${RCON_PASSWORD_FILE} ]; then
+    log ERROR "Initial RCON password file ${RCON_PASSWORD_FILE} does not seems to exist."
+    log ERROR "Please ensure your configuration."
+    log ERROR "If you are using Docker Secrets feature, please check this for further information: "
+    log ERROR " https://docs.docker.com/engine/swarm/secrets"
+    exit 1
+  else
+    RCON_PASSWORD=$(cat ${RCON_PASSWORD_FILE})
+    export RCON_PASSWORD
+  fi
+fi
 
 if [ -n "${INTERVAL_SEC:-}" ]; then
   log WARN 'INTERVAL_SEC is deprecated. Use BACKUP_INTERVAL instead'
