@@ -19,6 +19,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `RCON_HOST`=localhost
 - `RCON_PORT`=25575
 - `RCON_PASSWORD`=minecraft
+- `RCON_PASSWORD_FILE`: Can be set to read the RCON password from a file. Overrides `RCON_PASSWORD` if both are set.
 - `RCON_RETRIES`=5 : Set to a negative value to retry indefinitely
 - `RCON_RETRY_INTERVAL`=10s
 - `EXCLUDES`=\*.jar,cache,logs
