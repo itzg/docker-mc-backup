@@ -21,7 +21,7 @@ jobs:
         uses: hadolint/hadolint-action@v2.1.0
 
       - name: Setup qemu
-        uses: docker/setup-qemu-action@v1.2.0
+        uses: docker/setup-qemu-action@v2.0.0
 
       - name: Setup buildx
         id: buildx
