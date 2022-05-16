@@ -27,6 +27,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `BACKUP_METHOD`=tar
 - `RESTIC_ADDITIONAL_TAGS`=mc_backups
 - `TZ` : Can be set to the timezone to use for logging
+- `PRE_BACKUP_COMMANDS` and `POST_BACKUP_COMMANDS`: a newline-delimited list of commands to run before and after the backup. See [Pre/post-backup commands](#prepost-backup-commands) for details
 
 If `PRUNE_BACKUPS_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
 
@@ -134,6 +135,52 @@ This mechanism can also be used to avoid a long running container completely by 
 
 ```shell
 docker run --rm ...data and backup -v args... itzg/mc-backup backup now
+```
+
+## Pre/post-backup commands
+
+The `PRE_BACKUP_COMMANDS` and `POST_BACKUP_COMMANDS` variables may be set to a newline-delimited list of bash commands to run before and after the backup, respectively. Potential use-cases include sending notifications, or replicating a restic repository to a remote store.
+
+Some notes:
+
+- When specifying the commands in Docker compose files any `$` that are being used to refer to environment variables must be doubled up (i.e. `$$`) else Compose will try to substitute them
+- Multi-line commands will not work
+
+### Example
+
+```yaml
+version: '3.7'
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      TYPE: PAPER
+    volumes:
+      - mc:/data
+  backups:
+    image: itzg/mc-backup
+    environment:
+      BACKUP_INTERVAL: "2h"
+      RCON_HOST: mc
+      PRE_BACKUP_COMMANDS: |
+        echo "Before backup!"
+        echo "Also before backup from $$RCON_HOST to $$DEST_DIR"
+      POST_BACKUP_COMMANDS: |
+        echo "Backup from $$RCON_HOST to $$DEST_DIR finished"
+    volumes:
+      # mount the same volume used by server, but read-only
+      - mc:/data:ro
+      # use a host attached directory so that it in turn can be backed up
+      # to external/cloud storage
+      - ./mc-backups:/backups
+
+volumes:
+  mc: {}
+
 ```
 
 ## Example

@@ -34,6 +34,8 @@ fi
 : "${RCLONE_COMPRESS_METHOD:=gzip}"
 : "${RCLONE_REMOTE:=}"
 : "${RCLONE_DEST_DIR:=}"
+: "${PRE_BACKUP_COMMANDS:=}"
+: "${POST_BACKUP_COMMANDS:=}"
 export TZ
 
 export RCON_HOST
@@ -162,6 +164,15 @@ call_if_function_exists() {
     log INTERNALERROR "${function_name} is not a valid function!"
     return 2
   fi
+}
+
+run_commands() {
+  local _commands
+  readarray -t _commands <<<"$1"
+
+  for line in "${_commands[@]}"; do
+    eval "$line"
+  done
 }
 
 #####################
@@ -419,9 +430,18 @@ while true; do
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
 
+    if [[ $PRE_BACKUP_COMMANDS ]]; then
+      run_commands "$PRE_BACKUP_COMMANDS"
+    fi
+
     "${BACKUP_METHOD}" backup
 
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
+
+    if [[ $POST_BACKUP_COMMANDS ]]; then
+      run_commands "$POST_BACKUP_COMMANDS"
+    fi
+
     # Remove our exit trap now
     trap EXIT
   else
