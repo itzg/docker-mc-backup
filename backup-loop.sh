@@ -34,14 +34,19 @@ fi
 : "${RCLONE_COMPRESS_METHOD:=gzip}"
 : "${RCLONE_REMOTE:=}"
 : "${RCLONE_DEST_DIR:=}"
-: "${PRE_BACKUP_COMMANDS:=}"
-: "${POST_BACKUP_COMMANDS:=}"
+: "${PRE_BACKUP_SCRIPT:=}"
+: "${POST_BACKUP_SCRIPT:=}"
+: "${PRE_BACKUP_SCRIPT_FILE:=}"
+: "${POST_BACKUP_SCRIPT_FILE:=}"
 export TZ
 
 export RCON_HOST
 export RCON_PORT
 export RCON_PASSWORD
 export XDG_CONFIG_HOME
+export SRC_DIR
+export DEST_DIR
+export BACKUP_NAME
 
 ###############
 ##  common   ##
@@ -387,6 +392,18 @@ if [[ $RCON_PASSWORD_FILE ]]; then
   fi
 fi
 
+if [[ $PRE_BACKUP_SCRIPT ]]; then
+  PRE_BACKUP_SCRIPT_FILE=/tmp/pre-backup
+  printf '#!/bin/bash\n\n%s' "$PRE_BACKUP_SCRIPT" > "$PRE_BACKUP_SCRIPT_FILE"
+  chmod 700 "$PRE_BACKUP_SCRIPT_FILE"
+fi
+
+if [[ $POST_BACKUP_SCRIPT ]]; then
+  POST_BACKUP_SCRIPT_FILE=/tmp/post-backup
+  printf '#!/bin/bash\n\n%s' "$POST_BACKUP_SCRIPT" > "$POST_BACKUP_SCRIPT_FILE"
+  chmod 700 "$POST_BACKUP_SCRIPT_FILE"
+fi
+
 if [ -n "${INTERVAL_SEC:-}" ]; then
   log WARN 'INTERVAL_SEC is deprecated. Use BACKUP_INTERVAL instead'
 fi
@@ -430,16 +447,16 @@ while true; do
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
 
-    if [[ $PRE_BACKUP_COMMANDS ]]; then
-      run_commands "$PRE_BACKUP_COMMANDS"
+    if [[ $PRE_BACKUP_SCRIPT_FILE ]]; then
+      "$PRE_BACKUP_SCRIPT_FILE"
     fi
 
     "${BACKUP_METHOD}" backup
 
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
 
-    if [[ $POST_BACKUP_COMMANDS ]]; then
-      run_commands "$POST_BACKUP_COMMANDS"
+    if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
+      "$POST_BACKUP_SCRIPT_FILE"
     fi
 
     # Remove our exit trap now
