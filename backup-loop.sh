@@ -171,15 +171,6 @@ call_if_function_exists() {
   fi
 }
 
-run_commands() {
-  local _commands
-  readarray -t _commands <<<"$1"
-
-  for line in "${_commands[@]}"; do
-    eval "$line"
-  done
-}
-
 #####################
 ## specific method ##
 ##    functions    ##
