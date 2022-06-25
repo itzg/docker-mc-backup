@@ -217,7 +217,7 @@ tar() {
         if (( tries > 0 )); then
           log INFO "...retrying backup in 5 seconds"
           sleep 5
-          next
+          continue
         else
           log WARN "Giving up on this round of backup"
         fi
