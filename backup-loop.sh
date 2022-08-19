@@ -184,18 +184,18 @@ tar() {
     mkdir -p "${DEST_DIR}"
     case "${TAR_COMPRESS_METHOD}" in
         gzip)
-        readonly tar_parameters=("--gzip")
-        readonly backup_extension="tgz"
+        readonly compress_command=("gzip")
+        readonly backup_extension="gz"
         ;;
 
         bzip2)
-        readonly tar_parameters=("--bzip2")
+        readonly compress_command=("bzip2")
         readonly backup_extension="bz2"
         ;;
 
         zstd)
-        readonly tar_parameters=("--use-compress-program" "zstd ${ZSTD_PARAMETERS}")
-        readonly backup_extension="tar.zst"
+        readonly compress_command=("zstd" "${ZSTD_PARAMETERS}")
+        readonly backup_extension="zst"
         ;;
 
         *)
@@ -206,28 +206,38 @@ tar() {
   }
   backup() {
     ts=$(date +"%Y%m%d-%H%M%S")
-    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
-    tries=3
-    while (( tries-- > 0 )); do
-      log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-      command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
-      if [ ${exitCode:-0} -eq 0 ]; then
-        break
-      elif [ ${exitCode:-0} -eq 1 ]; then
-        if (( tries > 0 )); then
-          log INFO "...retrying backup in 5 seconds"
-          sleep 5
-          continue
-        else
-          log WARN "Giving up on this round of backup"
-        fi
-      elif [ ${exitCode:-0} -gt 1 ]; then
-        log ERROR "tar exited with code ${exitCode}! Aborting"
-        exit 1
-      fi
-    done
+    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.tar"
+    log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
+
+    # backup dat and dat_old files separately
+    (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+    if [ ${exitCode:-0} -eq 1 ]; then
+      log ERROR "dat files changed during backup"
+      return
+    elif [ ${exitCode:-0} -gt 1 ]; then
+      log ERROR "tar exited with code ${exitCode}! Aborting"
+      exit 1
+    fi
+    exitCode=0
+
+    # add other files to backup
+    command tar "${excludes[@]}" --exclude "*.dat" --exclude "*.dat_old" --warning=no-file-changed -rf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
+    # ignore exit code 1
+    if [ ${exitCode:-0} -gt 1 ]; then
+      log ERROR "tar exited with code ${exitCode}! Aborting"
+      exit 1
+    fi
+    exitCode=0
+
+    # compress backup
+    log INFO "Compressing backup ${outFile}"
+    command "${compress_command[@]}" "${outFile}" || exitCode=$?
+    if [ ${exitCode:-0} -gt 0 ]; then
+      log WARN "Cannot compress backup"
+    fi
+
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
-      ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
+      ln -sf "${BACKUP_NAME}-${ts}.tar.${backup_extension}" "${DEST_DIR}/latest.tar.${backup_extension}"
     fi
   }
   prune() {
@@ -322,18 +332,18 @@ rclone() {
     mkdir -p "${DEST_DIR}"
     case "${RCLONE_COMPRESS_METHOD}" in
         gzip)
-        readonly tar_parameters=("--gzip")
-        readonly backup_extension="tgz"
+        readonly compress_command=("gzip")
+        readonly backup_extension="gz"
         ;;
 
         bzip2)
-        readonly tar_parameters=("--bzip2")
+        readonly compress_command=("bzip2")
         readonly backup_extension="bz2"
         ;;
 
         zstd)
-        readonly tar_parameters=("--use-compress-program" "zstd ${ZSTD_PARAMETERS}")
-        readonly backup_extension="tar.zst"
+        readonly compress_command=("zstd" "${ZSTD_PARAMETERS}")
+        readonly backup_extension="zst"
         ;;
 
         *)
@@ -344,18 +354,37 @@ rclone() {
   }
   backup() {
     ts=$(date +"%Y%m%d-%H%M%S")
-    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
+    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.tar"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
+
+    # backup dat and dat_old files separately
+    (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
     if [ ${exitCode:-0} -eq 1 ]; then
-      log WARN "tar exited with code 1. Ignoring"
+      log ERROR "dat files changed during backup"
+      return
+    elif [ ${exitCode:-0} -gt 1 ]; then
+      log ERROR "tar exited with code ${exitCode}! Aborting"
+      exit 1
     fi
+    exitCode=0
+
+    # add other files to backup
+    command tar "${excludes[@]}" --exclude "*.dat" --exclude "*.dat_old" --warning=no-file-changed -rf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
+    # ignore exit code 1
     if [ ${exitCode:-0} -gt 1 ]; then
       log ERROR "tar exited with code ${exitCode}! Aborting"
       exit 1
     fi
+    exitCode=0
 
-    command rclone copy "${outFile}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
+    # compress backup
+    log INFO "Compressing backup ${outFile}"
+    command "${compress_command[@]}" "${outFile}" || exitCode=$?
+    if [ ${exitCode:-0} -gt 0 ]; then
+      log WARN "Cannot compress backup"
+    fi
+
+    command rclone copy "${outFile}.${backup_extension}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
     rm "${outFile}"
   }
   prune() {
