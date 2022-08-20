@@ -219,7 +219,7 @@ tar() {
       (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
 
       if [ ${exitCode:-0} -eq 1 ]; then
-        log ERROR "dat files changed during backup"
+        log WARN "dat files changed during backup"
         return
       elif [ ${exitCode:-0} -gt 1 ]; then
         log ERROR "tar exited with code ${exitCode}! Aborting"
@@ -382,7 +382,7 @@ rclone() {
       (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
 
       if [ ${exitCode:-0} -eq 1 ]; then
-        log ERROR "dat files changed during backup"
+        log WARN "dat files changed during backup"
         return
       elif [ ${exitCode:-0} -gt 1 ]; then
         log ERROR "tar exited with code ${exitCode}! Aborting"
@@ -414,8 +414,8 @@ rclone() {
       log WARN "Cannot compress backup"
     fi
 
-    command rclone copy "${outFile}.tar.${backup_extension}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
-    rm "${outFile}"
+    command rclone copy "${outFile}.${backup_extension}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
+    rm "${outFile}.${backup_extension}"
   }
   prune() {
     if [ -n "$(_find_old_backups)" ]; then
