@@ -414,7 +414,7 @@ rclone() {
       log WARN "Cannot compress backup"
     fi
 
-    command rclone copy "${outFile}.${backup_extension}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
+    command rclone copy "${outFile}.tar.${backup_extension}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
     rm "${outFile}"
   }
   prune() {
