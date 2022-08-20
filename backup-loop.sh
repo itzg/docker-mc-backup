@@ -207,25 +207,16 @@ tar() {
   backup() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
-    tries=3
-    while (( tries-- > 0 )); do
-      log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-      command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
-      if [ ${exitCode:-0} -eq 0 ]; then
-        break
-      elif [ ${exitCode:-0} -eq 1 ]; then
-        if (( tries > 0 )); then
-          log INFO "...retrying backup in 5 seconds"
-          sleep 5
-          continue
-        else
-          log WARN "Giving up on this round of backup"
-        fi
-      elif [ ${exitCode:-0} -gt 1 ]; then
-        log ERROR "tar exited with code ${exitCode}! Aborting"
-        exit 1
-      fi
-    done
+    log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
+    command tar "${excludes[@]}" "${tar_parameters[@]}" --sort name -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
+    if [ ${exitCode:-0} -eq 0 ]; then
+      true
+    elif [ ${exitCode:-0} -eq 1 ]; then
+      log WARN "Dat files changed as we read it"
+    elif [ ${exitCode:-0} -gt 1 ]; then
+      log ERROR "tar exited with code ${exitCode}! Aborting"
+      exit 1
+    fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
       ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
     fi
