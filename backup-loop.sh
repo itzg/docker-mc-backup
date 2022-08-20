@@ -212,7 +212,19 @@ tar() {
     # backup dat and dat_old files separately
     (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
     if [ ${exitCode:-0} -eq 1 ]; then
-      log ERROR "dat files changed during backup"
+      log ERROR "dat files changed during backup. Retrying in 5 seconds"
+      sleep 5
+      exitCode=0
+
+      (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+
+      if [ ${exitCode:-0} -eq 1 ]; then
+        log ERROR "dat files changed during backup"
+        return
+      elif [ ${exitCode:-0} -gt 1 ]; then
+        log ERROR "tar exited with code ${exitCode}! Aborting"
+        exit 1
+      fi
       return
     elif [ ${exitCode:-0} -gt 1 ]; then
       log ERROR "tar exited with code ${exitCode}! Aborting"
@@ -360,7 +372,19 @@ rclone() {
     # backup dat and dat_old files separately
     (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
     if [ ${exitCode:-0} -eq 1 ]; then
-      log ERROR "dat files changed during backup"
+      log ERROR "dat files changed during backup. Retrying in 5 seconds"
+      sleep 5
+      exitCode=0
+
+      (cd "${SRC_DIR}" && find . -type f -name "*.dat" -o -name "*.dat_old" ) | command tar "${excludes[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+
+      if [ ${exitCode:-0} -eq 1 ]; then
+        log ERROR "dat files changed during backup"
+        return
+      elif [ ${exitCode:-0} -gt 1 ]; then
+        log ERROR "tar exited with code ${exitCode}! Aborting"
+        exit 1
+      fi
       return
     elif [ ${exitCode:-0} -gt 1 ]; then
       log ERROR "tar exited with code ${exitCode}! Aborting"
