@@ -339,11 +339,14 @@ rclone() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" . || exitCode=$?
-    if [ ${exitCode:-0} -eq 1 ]; then
-      log WARN "tar exited with code 1. Ignoring"
-    fi
-    if [ ${exitCode:-0} -gt 1 ]; then
+    # sort files so that dat files are archived first
+    (cd "${SRC_DIR}" && { find . -type f -name "*.dat" -o -name "*.dat_old"; find . -type f -not -name "*.dat" -not -name "*.dat_old"; } ) |
+    command tar "${excludes[@]}" "${tar_parameters[@]}" --sort name -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+    if [ ${exitCode:-0} -eq 0 ]; then
+      true
+    elif [ ${exitCode:-0} -eq 1 ]; then
+      log WARN "Dat files changed as we read it"
+    elif [ ${exitCode:-0} -gt 1 ]; then
       log ERROR "tar exited with code ${exitCode}! Aborting"
       exit 1
     fi
