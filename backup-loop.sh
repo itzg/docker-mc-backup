@@ -241,6 +241,9 @@ tar() {
     fi
     exitCode=0
 
+    # enable saving while we compress backup
+    retry 5 5s rcon-cli save-on
+
     # compress backup
     log INFO "Compressing backup ${outFile}"
     command "${compress_command[@]}" "${outFile}" || exitCode=$?
@@ -400,6 +403,9 @@ rclone() {
       exit 1
     fi
     exitCode=0
+
+    # enable saving while we compress backup
+    retry 5 5s rcon-cli save-on
 
     # compress backup
     log INFO "Compressing backup ${outFile}"
