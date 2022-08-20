@@ -34,7 +34,7 @@ export RCON_PATH
 export PRUNE_BACKUPS_DAYS
 
 mkdir "${EXTRACT_DIR}"
-touch -d "$(( PRUNE_BACKUPS_DAYS + 2 )) days ago" "${LOCAL_DEST_DIR}/fake_backup_that_should_be_deleted.tgz"
+touch -d "$(( PRUNE_BACKUPS_DAYS + 2 )) days ago" "${LOCAL_DEST_DIR}/fake_backup_that_should_be_deleted.tar.gz"
 ls -al "${LOCAL_DEST_DIR}"
 
 timeout 50 docker run --rm \
@@ -51,7 +51,7 @@ timeout 50 docker run --rm \
           localhost:5000/itzg/mc-backup:latest
 
 tree "${LOCAL_DEST_DIR}"
-tar -xzf "${LOCAL_DEST_DIR}/"*.tgz -C "${EXTRACT_DIR}"
+tar -xzf "${LOCAL_DEST_DIR}/"*.tar.gz -C "${EXTRACT_DIR}"
 tree "${EXTRACT_DIR}"
 [ -z "$(find "${EXTRACT_DIR}" -name "exclude_*" -print -quit)" ]
 [ 4 -eq "$(find "${EXTRACT_DIR}" -name "backup_me*" -print | wc -l)" ]

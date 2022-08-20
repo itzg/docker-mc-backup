@@ -177,7 +177,7 @@ call_if_function_exists() {
 
 tar() {
   _find_old_backups() {
-    find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
+    find "${DEST_DIR}" -maxdepth 1 -name "*.tar.${backup_extension}" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
   }
 
   init() {
