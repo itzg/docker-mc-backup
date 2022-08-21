@@ -210,7 +210,7 @@ tar() {
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     # sort files so that dat files are archived first
     (cd "${SRC_DIR}" && { find . -type f -name "*.dat" -o -name "*.dat_old"; find . -type f -not -name "*.dat" -not -name "*.dat_old"; } ) |
-    command tar "${excludes[@]}" "${tar_parameters[@]}" --sort name -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
@@ -341,7 +341,7 @@ rclone() {
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     # sort files so that dat files are archived first
     (cd "${SRC_DIR}" && { find . -type f -name "*.dat" -o -name "*.dat_old"; find . -type f -not -name "*.dat" -not -name "*.dat_old"; } ) |
-    command tar "${excludes[@]}" "${tar_parameters[@]}" --sort name -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
