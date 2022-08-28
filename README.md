@@ -27,6 +27,7 @@ Provides a side-car container to backup itzg/minecraft-server world data.
 - `BACKUP_METHOD`=tar
 - `RESTIC_ADDITIONAL_TAGS`=mc_backups
 - `TZ` : Can be set to the timezone to use for logging
+- `PRE_BACKUP_SCRIPT`, `PRE_BACKUP_SCRIPT_FILE`, `POST_BACKUP_SCRIPT`, `POST_BACKUP_SCRIPT_FILE`: See [Pre/post-backup scripts](#prepost-backup-scripts)
 
 If `PRUNE_BACKUPS_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
 
@@ -134,6 +135,63 @@ This mechanism can also be used to avoid a long running container completely by 
 
 ```shell
 docker run --rm ...data and backup -v args... itzg/mc-backup backup now
+```
+
+## Pre/post-backup script
+
+The `PRE_BACKUP_SCRIPT` and `POST_BACKUP_SCRIPT` variables may be set to a bash script to run before and after the backup, respectively. Potential use-cases include sending notifications, or replicating a restic repository to a remote store.
+
+Alternatively `PRE_BACKUP_SCRIPT_FILE` and `POST_BACKUP_SCRIPT_FILE` may be set to the path of a script that has been mounted into the container. The file must be executable.
+
+Note that `*_FILE` variables will be overridden by their non-FILE versions if both are set.
+
+Some notes:
+
+- When specifying the script directly in Docker compose files any `$` that are being used to refer to environment variables must be doubled up (i.e. `$$`) else Compose will try to substitute them
+
+### Example
+
+With a executable file called `post-backup.sh` next to the compose file with the following contents
+
+```sh
+echo "Backup from $RCON_HOST to $DEST_DIR finished"
+```
+
+and the following compose definition
+
+```yaml
+version: '3.7'
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      TYPE: PAPER
+    volumes:
+      - mc:/data
+  backups:
+    image: itzg/mc-backup
+    environment:
+      BACKUP_INTERVAL: "2h"
+      RCON_HOST: mc
+      PRE_BACKUP_SCRIPT: |
+        echo "Before backup!"
+        echo "Also before backup from $$RCON_HOST to $$DEST_DIR"
+      POST_BACKUP_SCRIPT_FILE: /post-backup.sh
+    volumes:
+      # mount the same volume used by server, but read-only
+      - mc:/data:ro
+      # use a host attached directory so that it in turn can be backed up
+      # to external/cloud storage
+      - ./mc-backups:/backups
+      - ./post-backup.sh:/post-backup.sh:ro
+
+volumes:
+  mc: {}
+
 ```
 
 ## Example
