@@ -479,7 +479,10 @@ while true; do
 
   if [[ ${PAUSE_IF_NO_PLAYERS^^} = TRUE ]]; then
     while true; do
-      if ! PLAYERS_ONLINE=$(mc-monitor status --host "${RCON_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
+      if [ -e "${SRC_DIR}/.paused" ]; then
+        log INFO "Server paused, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
+        sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
+      elif ! PLAYERS_ONLINE=$(mc-monitor status --host "${RCON_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
         log ERROR "Error querying the server, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
       elif [ "${PLAYERS_ONLINE}" = 0 ]; then
