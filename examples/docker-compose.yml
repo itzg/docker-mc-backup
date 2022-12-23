@@ -15,8 +15,8 @@ services:
     image: itzg/mc-backup
     environment:
       BACKUP_INTERVAL: "2h"
-      # instead of network_mode below, could declare RCON_HOST
-      # RCON_HOST: mc
+      # Alternatively, comment this out and uncomment network_mode below
+      RCON_HOST: mc
     volumes:
       # mount the same volume used by server, but read-only
       - mc:/data:ro
@@ -24,7 +24,7 @@ services:
       # to external/cloud storage
       - ./mc-backups:/backups
     # share network namespace with server to simplify rcon access
-    network_mode: "service:mc"
+    #network_mode: "service:mc"
 
 volumes:
   mc: {}
