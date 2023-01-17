@@ -39,7 +39,7 @@ jobs:
           driver-opts: network=host
 
       - name: Build and push to local registry
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v3.3.0
         with:
           push: true
           tags: localhost:5000/itzg/mc-backup:latest
