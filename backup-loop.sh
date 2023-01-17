@@ -28,6 +28,7 @@ fi
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
+: "${RESTIC_HOSTNAME:=$(hostname)}"
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
 : "${TZ:=Etc/UTC}"
@@ -296,8 +297,8 @@ restic() {
     readonly restic_tags_filter
   }
   backup() {
-    log INFO "Backing up content in ${SRC_DIR}"
-    command restic backup "${restic_tags_arguments[@]}" "${excludes[@]}" "${SRC_DIR}" | log INFO
+    log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
+    command restic backup --hostname "${RESTIC_HOSTNAME}" "${restic_tags_arguments[@]}" "${excludes[@]}" "${SRC_DIR}" | log INFO
   }
   prune() {
     # We cannot use `grep -q` here - see https://github.com/restic/restic/issues/1466
