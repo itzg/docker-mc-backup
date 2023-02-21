@@ -27,6 +27,7 @@ fi
 : "${RCON_RETRIES:=5}"
 : "${RCON_RETRY_INTERVAL:=10s}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
+: "${EXCLUDES_FILE:=}" # Path to file containing list of glob(3) patterns
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
 : "${RESTIC_HOSTNAME:=$(hostname)}"
@@ -416,13 +417,26 @@ if ! is_function "${BACKUP_METHOD}"; then
   log ERROR "Invalid BACKUP_METHOD provided: ${BACKUP_METHOD}"
 fi
 
+excludes=()
+
 # We unfortunately can't use a here-string, as it inserts new line at the end
 readarray -td, excludes_patterns < <(printf '%s' "${EXCLUDES}")
 
-excludes=()
 for pattern in "${excludes_patterns[@]}"; do
   excludes+=(--exclude "${pattern}")
 done
+
+if [[ $EXCLUDES_FILE ]]; then
+  if [ ! -e ${EXCLUDES_FILE} ]; then
+    log WARN "Excludes file ${EXCLUDES_FILE} does not seems to exist."
+  else
+    while read -r pattern; do
+      if [ -n "${pattern}" ]; then
+        excludes+=(--exclude "${pattern}")
+      fi
+    done < "${EXCLUDES_FILE}"
+  fi
+fi
 
 "${BACKUP_METHOD}" init
 

@@ -26,6 +26,7 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `RCON_RETRIES`=5 : Set to a negative value to retry indefinitely
 - `RCON_RETRY_INTERVAL`=10s
 - `EXCLUDES`=\*.jar,cache,logs
+- `EXCLUDES_FILE`: Can be set to read the list of excludes (one per line) from a file. Can be used with `EXCLUDES` to add more excludes.
 - `BACKUP_METHOD`=tar
 - `RESTIC_ADDITIONAL_TAGS`=mc_backups
 - `TZ` : Can be set to the timezone to use for logging
