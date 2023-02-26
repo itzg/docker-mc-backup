@@ -30,7 +30,7 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `BACKUP_METHOD`=tar
 - `RESTIC_ADDITIONAL_TAGS`=mc_backups
 - `TZ` : Can be set to the timezone to use for logging
-- `PRE_SAVE_SCRIPT`, `PRE_SAVE_SCRIPT_FILE`, `PRE_BACKUP_SCRIPT`, `PRE_BACKUP_SCRIPT_FILE`, `POST_BACKUP_SCRIPT`, `POST_BACKUP_SCRIPT_FILE`, `POST_SAVE_SCRIPT`, `POST_SAVE_SCRIPT_FILE`: See [Backup scripts](#backup-scripts)
+- `PRE_SAVE_ALL_SCRIPT`, `PRE_BACKUP_SCRIPT`, `PRE_SAVE_ON_SCRIPT`, `POST_BACKUP_SCRIPT`, `*_SCRIPT_FILE`: See [Backup scripts](#backup-scripts)
 
 If `PRUNE_BACKUPS_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
 
@@ -144,12 +144,12 @@ docker run --rm ...data and backup -v args... itzg/mc-backup backup now
 
 ## Backup scripts
 
-The `PRE_SAVE_SCRIPT`, `PRE_BACKUP_SCRIPT`, `POST_BACKUP_SCRIPT`, `POST_SAVE_SCRIPT` variables may be set to a bash script to run before and after the backup process.
+The `PRE_SAVE_ALL_SCRIPT`, `PRE_BACKUP_SCRIPT`, `PRE_SAVE_ON_SCRIPT`, and `POST_BACKUP_SCRIPT`, variables may be set to a bash script to run before and after the backup process.
 Potential use-cases include sending notifications, or replicating a restic repository to a remote store.
 
-The backup waits for the server to respond to a rcon "save-on" command before running the scripts. After, the `PRE_SAVE_SCRIPT` is run, followed by rcon "save-off" and "save-all" commands. The, the `PRE_BACKUP_SCRIPT` is run, followed by the backup process. Then, the `POST_BACKUP_SCRIPT` is run, followed by a rcon "save-on" command. Finally, the `POST_SAVE_SCRIPT` is run.
+The backup waits for the server to respond to a rcon "save-on" command before running the scripts. After, the `PRE_SAVE_ALL_SCRIPT` is run, followed by rcon "save-off" and "save-all" commands. The, the `PRE_BACKUP_SCRIPT` is run, followed by the backup process. Then, the `PRE_SAVE_ON_SCRIPT` is run, followed by a rcon "save-on" command. Finally, the `POST_BACKUP_SCRIPT` is run.
 
-Alternatively `PRE_SAVE_SCRIPT_FILE`, `PRE_BACKUP_SCRIPT_FILE`, `POST_BACKUP_SCRIPT_FILE`, and `POST_SAVE_SCRIPT_FILE` may be set to the path of a script that has been mounted into the container. The file must be executable.
+Alternatively `PRE_SAVE_ALL_SCRIPT_FILE` `PRE_BACKUP_SCRIPT_FILE`, `POST_BACKUP_SCRIPT_FILE`, and `PRE_SAVE_ON_SCRIPT_FILE` may be set to the path of a script that has been mounted into the container. The file must be executable.
 
 Note that `*_FILE` variables will be overridden by their non-FILE versions if both are set.
 

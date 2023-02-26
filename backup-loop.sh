@@ -39,12 +39,12 @@ fi
 : "${RCLONE_DEST_DIR:=}"
 : "${PRE_SAVE_SCRIPT:=}"
 : "${PRE_BACKUP_SCRIPT:=}"
+: "${PRE_SAVE_ON_SCRIPT:=}"
 : "${POST_BACKUP_SCRIPT:=}"
-: "${POST_SAVE_SCRIPT:=}"
 : "${PRE_SAVE_SCRIPT_FILE:=}"
 : "${PRE_BACKUP_SCRIPT_FILE:=}"
+: "${PRE_SAVE_ON_SCRIPT_FILE:=}"
 : "${POST_BACKUP_SCRIPT_FILE:=}"
-: "${POST_SAVE_SCRIPT_FILE:=}"
 export TZ
 
 export RCON_HOST
@@ -408,16 +408,16 @@ if [[ $PRE_BACKUP_SCRIPT ]]; then
   chmod 700 "$PRE_BACKUP_SCRIPT_FILE"
 fi
 
+if [[ $PRE_SAVE_ON_SCRIPT ]]; then
+  PRE_SAVE_ON_SCRIPT_FILE=/tmp/pre-save-on
+  printf '#!/bin/bash\n\n%s' "$PRE_SAVE_ON_SCRIPT" > "$PRE_SAVE_ON_SCRIPT_FILE"
+  chmod 700 "$PRE_SAVE_ON_SCRIPT_FILE"
+fi
+
 if [[ $POST_BACKUP_SCRIPT ]]; then
   POST_BACKUP_SCRIPT_FILE=/tmp/post-backup
   printf '#!/bin/bash\n\n%s' "$POST_BACKUP_SCRIPT" > "$POST_BACKUP_SCRIPT_FILE"
   chmod 700 "$POST_BACKUP_SCRIPT_FILE"
-fi
-
-if [[ $POST_SAVE_SCRIPT ]]; then
-  POST_SAVE_SCRIPT_FILE=/tmp/post-save
-  printf '#!/bin/bash\n\n%s' "$POST_SAVE_SCRIPT" > "$POST_SAVE_SCRIPT_FILE"
-  chmod 700 "$POST_SAVE_SCRIPT_FILE"
 fi
 
 if [ -n "${INTERVAL_SEC:-}" ]; then
@@ -486,8 +486,8 @@ while true; do
 
     "${BACKUP_METHOD}" backup
 
-    if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
-      "$POST_BACKUP_SCRIPT_FILE"
+    if [[ $PRE_SAVE_ON_SCRIPT_FILE ]]; then
+      "$PRE_SAVE_ON_SCRIPT_FILE"
     fi
 
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
@@ -495,8 +495,8 @@ while true; do
     # Remove our exit trap now
     trap EXIT
     
-    if [[ $POST_SAVE_SCRIPT_FILE ]]; then
-      "$POST_SAVE_SCRIPT_FILE"
+    if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
+      "$POST_BACKUP_SCRIPT_FILE"
     fi
 
   else
