@@ -37,11 +37,11 @@ fi
 : "${RCLONE_COMPRESS_METHOD:=gzip}"
 : "${RCLONE_REMOTE:=}"
 : "${RCLONE_DEST_DIR:=}"
-: "${PRE_SAVE_SCRIPT:=}"
+: "${PRE_SAVE_ALL_SCRIPT:=}"
 : "${PRE_BACKUP_SCRIPT:=}"
 : "${PRE_SAVE_ON_SCRIPT:=}"
 : "${POST_BACKUP_SCRIPT:=}"
-: "${PRE_SAVE_SCRIPT_FILE:=}"
+: "${PRE_SAVE_ALL_SCRIPT_FILE:=}"
 : "${PRE_BACKUP_SCRIPT_FILE:=}"
 : "${PRE_SAVE_ON_SCRIPT_FILE:=}"
 : "${POST_BACKUP_SCRIPT_FILE:=}"
@@ -396,10 +396,10 @@ if [[ $RCON_PASSWORD_FILE ]]; then
   fi
 fi
 
-if [[ $PRE_SAVE_SCRIPT ]]; then
-  PRE_SAVE_SCRIPT_FILE=/tmp/pre-save
-  printf '#!/bin/bash\n\n%s' "$PRE_SAVE_SCRIPT" > "$PRE_SAVE_SCRIPT_FILE"
-  chmod 700 "$PRE_SAVE_SCRIPT_FILE"
+if [[ $PRE_SAVE_ALL_SCRIPT ]]; then
+  PRE_SAVE_ALL_SCRIPT_FILE=/tmp/pre-save-all
+  printf '#!/bin/bash\n\n%s' "$PRE_SAVE_ALL_SCRIPT" > "$PRE_SAVE_ALL_SCRIPT_FILE"
+  chmod 700 "$PRE_SAVE_ALL_SCRIPT_FILE"
 fi
 
 if [[ $PRE_BACKUP_SCRIPT ]]; then
@@ -468,8 +468,8 @@ while true; do
   log INFO "waiting for rcon readiness..."
   retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
 
-  if [[ $PRE_SAVE_SCRIPT_FILE ]]; then
-    "$PRE_SAVE_SCRIPT_FILE"
+  if [[ $PRE_SAVE_ALL_SCRIPT_FILE ]]; then
+    "$PRE_SAVE_ALL_SCRIPT_FILE"
   fi
 
   if retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-off; then
