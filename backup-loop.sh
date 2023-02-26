@@ -414,10 +414,10 @@ if [[ $POST_BACKUP_SCRIPT ]]; then
   chmod 700 "$POST_BACKUP_SCRIPT_FILE"
 fi
 
-if [[ $POST_RESTORE_SCRIPT ]]; then
-  POST_RESTORE_SCRIPT_FILE=/tmp/post-restore
-  printf '#!/bin/bash\n\n%s' "$POST_RESTORE_SCRIPT" > "$POST_RESTORE_SCRIPT_FILE"
-  chmod 700 "$POST_RESTORE_SCRIPT_FILE"
+if [[ $POST_SAVE_SCRIPT ]]; then
+  POST_SAVE_SCRIPT_FILE=/tmp/post-save
+  printf '#!/bin/bash\n\n%s' "$POST_SAVE_SCRIPT" > "$POST_SAVE_SCRIPT_FILE"
+  chmod 700 "$POST_SAVE_SCRIPT_FILE"
 fi
 
 if [ -n "${INTERVAL_SEC:-}" ]; then
