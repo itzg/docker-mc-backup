@@ -37,10 +37,14 @@ fi
 : "${RCLONE_COMPRESS_METHOD:=gzip}"
 : "${RCLONE_REMOTE:=}"
 : "${RCLONE_DEST_DIR:=}"
+: "${PRE_SAVE_SCRIPT:=}"
 : "${PRE_BACKUP_SCRIPT:=}"
 : "${POST_BACKUP_SCRIPT:=}"
+: "${POST_SAVE_SCRIPT:=}"
+: "${PRE_SAVE_SCRIPT_FILE:=}"
 : "${PRE_BACKUP_SCRIPT_FILE:=}"
 : "${POST_BACKUP_SCRIPT_FILE:=}"
+: "${POST_SAVE_SCRIPT_FILE:=}"
 export TZ
 
 export RCON_HOST
@@ -392,6 +396,12 @@ if [[ $RCON_PASSWORD_FILE ]]; then
   fi
 fi
 
+if [[ $PRE_SAVE_SCRIPT ]]; then
+  PRE_SAVE_SCRIPT_FILE=/tmp/pre-save
+  printf '#!/bin/bash\n\n%s' "$PRE_SAVE_SCRIPT" > "$PRE_SAVE_SCRIPT_FILE"
+  chmod 700 "$PRE_SAVE_SCRIPT_FILE"
+fi
+
 if [[ $PRE_BACKUP_SCRIPT ]]; then
   PRE_BACKUP_SCRIPT_FILE=/tmp/pre-backup
   printf '#!/bin/bash\n\n%s' "$PRE_BACKUP_SCRIPT" > "$PRE_BACKUP_SCRIPT_FILE"
@@ -402,6 +412,12 @@ if [[ $POST_BACKUP_SCRIPT ]]; then
   POST_BACKUP_SCRIPT_FILE=/tmp/post-backup
   printf '#!/bin/bash\n\n%s' "$POST_BACKUP_SCRIPT" > "$POST_BACKUP_SCRIPT_FILE"
   chmod 700 "$POST_BACKUP_SCRIPT_FILE"
+fi
+
+if [[ $POST_RESTORE_SCRIPT ]]; then
+  POST_RESTORE_SCRIPT_FILE=/tmp/post-restore
+  printf '#!/bin/bash\n\n%s' "$POST_RESTORE_SCRIPT" > "$POST_RESTORE_SCRIPT_FILE"
+  chmod 700 "$POST_RESTORE_SCRIPT_FILE"
 fi
 
 if [ -n "${INTERVAL_SEC:-}" ]; then
@@ -446,11 +462,15 @@ if ! is_one_shot; then
   sleep ${INITIAL_DELAY}
 fi
 
-log INFO "waiting for rcon readiness..."
-retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
-
 
 while true; do
+
+  log INFO "waiting for rcon readiness..."
+  retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
+
+  if [[ $PRE_SAVE_SCRIPT_FILE ]]; then
+    "$PRE_SAVE_SCRIPT_FILE"
+  fi
 
   if retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-off; then
     # No matter what we were doing, from now on if the script crashes
@@ -466,14 +486,19 @@ while true; do
 
     "${BACKUP_METHOD}" backup
 
-    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
-
     if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
       "$POST_BACKUP_SCRIPT_FILE"
     fi
 
+    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
+
     # Remove our exit trap now
     trap EXIT
+    
+    if [[ $POST_SAVE_SCRIPT_FILE ]]; then
+      "$POST_SAVE_SCRIPT_FILE"
+    fi
+
   else
     log ERROR "Unable to turn saving off. Is the server running?"
     exit 1
