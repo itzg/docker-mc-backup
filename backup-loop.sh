@@ -22,8 +22,28 @@ fi
 : "${SERVER_PORT:=25565}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
-: "${RCON_PASSWORD_FILE:=}"
-: "${RCON_PASSWORD:=minecraft}"
+
+if ! [[ -v RCON_PASSWORD ]] && ! [[ -v RCON_PASSWORD_FILE ]] && [[ -f "${SRC_DIR}/.rcon-cli.env" ]]; then
+  . "${SRC_DIR}/.rcon-cli.env"
+  # shellcheck disable=SC2154
+  # since it comes from rcon-cli
+  RCON_PASSWORD="$password"
+elif [[ -v RCON_PASSWORD_FILE ]]; then
+  if [ ! -e "${RCON_PASSWORD_FILE}" ]; then
+    log ERROR "Initial RCON password file ${RCON_PASSWORD_FILE} does not seems to exist."
+    log ERROR "Please ensure your configuration."
+    log ERROR "If you are using Docker Secrets feature, please check this for further information: "
+    log ERROR " https://docs.docker.com/engine/swarm/secrets"
+    exit 1
+  else
+    RCON_PASSWORD=$(cat "${RCON_PASSWORD_FILE}")
+  fi
+elif ! [[ -v RCON_PASSWORD ]]; then
+  # Legacy default
+  RCON_PASSWORD=minecraft
+fi
+export RCON_PASSWORD
+
 : "${RCON_RETRIES:=5}"
 : "${RCON_RETRY_INTERVAL:=10s}"
 : "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
@@ -49,7 +69,6 @@ export TZ
 
 export RCON_HOST
 export RCON_PORT
-export RCON_PASSWORD
 export XDG_CONFIG_HOME
 export SRC_DIR
 export DEST_DIR
@@ -382,25 +401,6 @@ rclone() {
 ##########
 ## main ##
 ##########
-
-if [[ $RCON_PASSWORD_FILE ]]; then
-  if [ ! -e ${RCON_PASSWORD_FILE} ]; then
-    log ERROR "Initial RCON password file ${RCON_PASSWORD_FILE} does not seems to exist."
-    log ERROR "Please ensure your configuration."
-    log ERROR "If you are using Docker Secrets feature, please check this for further information: "
-    log ERROR " https://docs.docker.com/engine/swarm/secrets"
-    exit 1
-  else
-    RCON_PASSWORD=$(cat ${RCON_PASSWORD_FILE})
-    export RCON_PASSWORD
-  fi
-fi
-
-if [[ $PRE_SAVE_ALL_SCRIPT ]]; then
-  PRE_SAVE_ALL_SCRIPT_FILE=/tmp/pre-save-all
-  printf '#!/bin/bash\n\n%s' "$PRE_SAVE_ALL_SCRIPT" > "$PRE_SAVE_ALL_SCRIPT_FILE"
-  chmod 700 "$PRE_SAVE_ALL_SCRIPT_FILE"
-fi
 
 if [[ $PRE_BACKUP_SCRIPT ]]; then
   PRE_BACKUP_SCRIPT_FILE=/tmp/pre-backup
