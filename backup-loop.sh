@@ -323,7 +323,7 @@ restic() {
   }
   backup() {
     log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
-    command restic backup --hostname "${RESTIC_HOSTNAME}" "${restic_tags_arguments[@]}" "${excludes[@]}" "${SRC_DIR}" | log INFO
+    command restic backup --host "${RESTIC_HOSTNAME}" "${restic_tags_arguments[@]}" "${excludes[@]}" "${SRC_DIR}" | log INFO
   }
   prune() {
     # We cannot use `grep -q` here - see https://github.com/restic/restic/issues/1466
