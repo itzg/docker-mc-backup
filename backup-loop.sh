@@ -46,7 +46,7 @@ export RCON_PASSWORD
 
 : "${RCON_RETRIES:=5}"
 : "${RCON_RETRY_INTERVAL:=10s}"
-: "${EXCLUDES:=*.jar,cache,logs}" # Comma separated list of glob(3) patterns
+: "${EXCLUDES:=*.jar,cache,logs,*.tmp}" # Comma separated list of glob(3) patterns
 : "${EXCLUDES_FILE:=}" # Path to file containing list of glob(3) patterns
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
