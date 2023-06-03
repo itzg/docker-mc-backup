@@ -53,6 +53,7 @@ FROM alpine
 RUN apk -U --no-cache add \
     bash \
     coreutils \
+    curl \
     openssh-client \
     tar \
     tzdata \
