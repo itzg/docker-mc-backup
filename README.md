@@ -86,6 +86,8 @@ You can fine tune the retention cycle of the restic backups using the `PRUNE_RES
 | :warning: | SFTP restic backend is not directly supported. Please use RCLONE backend with SFTP support. |
 |-----------|---|
 
+- Information about required S3 permissions [can be found here](https://restic.readthedocs.io/en/latest/080_examples.html)
+
 ##### `rclone` backup method
 Rclone acts as the `tar` backup method but automatically moves the compressed files to a remote drive via [rclone](https://rclone.org/).
 
