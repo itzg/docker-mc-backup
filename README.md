@@ -1,5 +1,5 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/itzg/mc-backup.svg)](https://hub.docker.com/r/itzg/mc-backup)
-[![release](https://github.com/itzg/docker-mc-backup/workflows/release/badge.svg?branch=multiarch)](https://github.com/itzg/docker-mc-backup/actions?query=workflow%3Arelease)
+[![Build](https://github.com/itzg/docker-mc-backup/actions/workflows/build.yml/badge.svg)](https://github.com/itzg/docker-mc-backup/actions/workflows/build.yml)
 [![Discord](https://img.shields.io/discord/660567679458869252?label=Discord&logo=discord)](https://discord.gg/DXfKpjB)
 
 Provides a side-car container to back up [itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server) world data. Backups are coordinated automatically by using RCON to flush data, pause writes, and resume after backup is completed. 
