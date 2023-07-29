@@ -128,6 +128,15 @@ volumes:
 - `/backups` :
   The volume where incremental tgz files will be created, if using tar backup method.
 
+## Restoring tar backups
+
+This image includes a script called `restore-backup` which will:
+1. Check if the `$SRC_DIR` (default is `/data`) is empty
+2. and if any files are available in `$DEST_DIR` (default is `/backups`), 
+3. then un-tars the newest one into `$SRC_DIR`
+
+The [compose file example](#docker-compose) shows creating an "init container" to run the restore
+
 ## On-demand backups
 
 If you would like to kick off a backup prior to the next backup interval, you can `exec` the command `backup now` within the running backup container. For example, using the [Docker Compose example](examples/docker-compose.yml) where the service name is `backups`, the exec command becomes:
@@ -159,7 +168,7 @@ Some notes:
 
 ### Example
 
-With a executable file called `post-backup.sh` next to the compose file with the following contents
+With an executable file called `post-backup.sh` next to the compose file with the following contents
 
 ```sh
 echo "Backup from $RCON_HOST to $DEST_DIR finished"
@@ -239,34 +248,45 @@ containers:
 ### Docker Compose
 
 ```yaml
-version: '3.7'
+version: "3.8"
 
 services:
   mc:
-    image: itzg/minecraft-server
+    image: itzg/minecraft-server:latest
     ports:
-    - 25565:25565
+      - "25565:25565"
     environment:
       EULA: "TRUE"
+      TYPE: PAPER
+    depends_on:
+      restore-backup:
+        condition: service_completed_successfully
     volumes:
-    - mc:/data
+      - ./mc-data:/data
+  # "init" container for mc to restore the data volume when empty    
+  restore-backup:
+    # Same image as mc, but any base image with bash and tar will work
+    image: itzg/mc-backup
+    restart: no
+    entrypoint: restore-tar-backup
+    volumes:
+      # Must be same mount as mc service, needs to be writable
+      - ./mc-data:/data
+      # Must be same mount as backups service, but can be read-only
+      - ./mc-backups:/backups:ro
   backups:
     image: itzg/mc-backup
+    depends_on:
+      mc:
+        condition: service_healthy
     environment:
       BACKUP_INTERVAL: "2h"
-      # instead of network_mode below, could declare RCON_HOST
-      # RCON_HOST: mc
+      RCON_HOST: mc
+      # since this service waits for mc to be healthy, no initial delay is needed
+      INITIAL_DELAY: 0
     volumes:
-    # mount the same volume used by server, but read-only
-    - mc:/data:ro
-    # use a host attached directory so that it in turn can be backed up
-    # to external/cloud storage
-    - ./mc-backups:/backups
-    # share network namespace with server to simplify rcon access
-    network_mode: "service:mc"
-
-volumes:
-  mc: {}
+      - ./mc-data:/data:ro
+      - ./mc-backups:/backups
 ```
 
 ### Restic with rclone

@@ -23,27 +23,6 @@ fi
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
 
-if ! [[ -v RCON_PASSWORD ]] && ! [[ -v RCON_PASSWORD_FILE ]] && [[ -f "${SRC_DIR}/.rcon-cli.env" ]]; then
-  . "${SRC_DIR}/.rcon-cli.env"
-  # shellcheck disable=SC2154
-  # since it comes from rcon-cli
-  RCON_PASSWORD="$password"
-elif [[ -v RCON_PASSWORD_FILE ]]; then
-  if [ ! -e "${RCON_PASSWORD_FILE}" ]; then
-    log ERROR "Initial RCON password file ${RCON_PASSWORD_FILE} does not seems to exist."
-    log ERROR "Please ensure your configuration."
-    log ERROR "If you are using Docker Secrets feature, please check this for further information: "
-    log ERROR " https://docs.docker.com/engine/swarm/secrets"
-    exit 1
-  else
-    RCON_PASSWORD=$(cat "${RCON_PASSWORD_FILE}")
-  fi
-elif ! [[ -v RCON_PASSWORD ]]; then
-  # Legacy default
-  RCON_PASSWORD=minecraft
-fi
-export RCON_PASSWORD
-
 : "${RCON_RETRIES:=5}"
 : "${RCON_RETRY_INTERVAL:=10s}"
 : "${EXCLUDES:=*.jar,cache,logs,*.tmp}" # Comma separated list of glob(3) patterns
@@ -195,6 +174,29 @@ call_if_function_exists() {
     log INTERNALERROR "${function_name} is not a valid function!"
     return 2
   fi
+}
+
+load_rcon_password() {
+  if ! [[ -v RCON_PASSWORD ]] && ! [[ -v RCON_PASSWORD_FILE ]] && [[ -f "${SRC_DIR}/.rcon-cli.env" ]]; then
+    . "${SRC_DIR}/.rcon-cli.env"
+    # shellcheck disable=SC2154
+    # since it comes from rcon-cli
+    RCON_PASSWORD="$password"
+  elif [[ -v RCON_PASSWORD_FILE ]]; then
+    if [ ! -e "${RCON_PASSWORD_FILE}" ]; then
+      log ERROR "Initial RCON password file ${RCON_PASSWORD_FILE} does not seems to exist."
+      log ERROR "Please ensure your configuration."
+      log ERROR "If you are using Docker Secrets feature, please check this for further information: "
+      log ERROR " https://docs.docker.com/engine/swarm/secrets"
+      exit 1
+    else
+      RCON_PASSWORD=$(cat "${RCON_PASSWORD_FILE}")
+    fi
+  elif ! [[ -v RCON_PASSWORD ]]; then
+    # Legacy default
+    RCON_PASSWORD=minecraft
+  fi
+  export RCON_PASSWORD
 }
 
 #####################
@@ -464,6 +466,7 @@ fi
 
 
 while true; do
+  load_rcon_password
 
   log INFO "waiting for rcon readiness..."
   retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on

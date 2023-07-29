@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -euo pipefail
+
+: "${SRC_DIR:=/data}"
+: "${DEST_DIR:=/backups}"
+: "${DEBUG:=false}"
+
+if [[ ${DEBUG,,} = true ]]; then
+  set -x
+fi
+
+# shellcheck disable=SC2012
+if (( $(ls "$SRC_DIR" | wc -l) == 0 )); then
+  if (( $(ls "$DEST_DIR" | wc -l) > 0 )); then
+    src=$(ls -t "$DEST_DIR" | head -1)
+    echo "Restoring from $src"
+    tar xf $src -C "$SRC_DIR"
+  else
+    echo "No backups available to restore"
+  fi
+else
+  echo "No restore needed"
+fi
