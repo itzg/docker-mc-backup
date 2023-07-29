@@ -7,14 +7,14 @@ ARG TARGETVARIANT
 
 RUN mkdir -p /opt
 
-ARG RCON_CLI_VERSION=1.6.0
+ARG RCON_CLI_VERSION=1.6.2
 
 ADD https://github.com/itzg/rcon-cli/releases/download/${RCON_CLI_VERSION}/rcon-cli_${RCON_CLI_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/rcon-cli.tar.gz
 
 RUN tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
     chmod +x /opt/rcon-cli
 
-ARG MC_MONITOR_VERSION=0.10.6
+ARG MC_MONITOR_VERSION=0.12.1
 
 ADD https://github.com/itzg/mc-monitor/releases/download/${MC_MONITOR_VERSION}/mc-monitor_${MC_MONITOR_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/mc-monitor.tar.gz
 
@@ -84,11 +84,8 @@ COPY --from=builder /opt/rclone /opt/rclone
 
 RUN ln -s /opt/rclone /usr/bin
 
-
-COPY backup-loop.sh /opt/
-COPY backup /usr/bin/
-
-RUN chmod +x /opt/backup-loop.sh /usr/bin/backup
+COPY --chmod=755 scripts/opt/ /opt/
+COPY --chmod=755 scripts/bin/ /usr/bin/
 
 VOLUME ["/data", "/backups"]
 WORKDIR "/backups"
