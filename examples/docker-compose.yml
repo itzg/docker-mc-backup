@@ -34,6 +34,8 @@ services:
       RCON_HOST: mc
       # since this service waits for mc to be healthy, no initial delay is needed
       INITIAL_DELAY: 0
+      # As an example, to backup only the world data:
+      # INCLUDES: world,world_nether,world_the_end
     volumes:
       - ./mc-data:/data:ro
       - ./mc-backups:/backups

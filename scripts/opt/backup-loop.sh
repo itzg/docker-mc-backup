@@ -2,8 +2,15 @@
 
 set -euo pipefail
 
+function isTrue() {
+  [ "${1,,}" == "true" ]
+}
+function isDebug() {
+  isTrue "$DEBUG"
+}
+
 : "${DEBUG:=false}"
-if [ "${DEBUG,,}" == "true" ]; then
+if isDebug; then
   set -x
 fi
 
@@ -30,6 +37,7 @@ fi
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS:=mc_backups}" # Space separated list of restic tags
 : "${RESTIC_HOSTNAME:=$(hostname)}"
+: "${RESTIC_VERBOSE:=false}"
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
 : "${TZ:=Etc/UTC}"
@@ -211,6 +219,8 @@ load_rcon_password() {
 
 
 tar() {
+  readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
+
   _find_old_backups() {
     find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
   }
@@ -243,9 +253,7 @@ tar() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    # sort files so that dat files are archived first
-    (cd "${SRC_DIR}" && { find . -type f -name "*.dat" -o -name "*.dat_old"; find . -type f -not -name "*.dat" -not -name "*.dat_old"; } ) |
-    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
@@ -269,6 +277,8 @@ tar() {
 
 
 restic() {
+  readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-/data}")
+
   _delete_old_backups() {
     # shellcheck disable=SC2086
     command restic forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
@@ -325,7 +335,16 @@ restic() {
   }
   backup() {
     log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
-    command restic backup --host "${RESTIC_HOSTNAME}" "${restic_tags_arguments[@]}" "${excludes[@]}" "${SRC_DIR}" | log INFO
+    args=(
+      --host "${RESTIC_HOSTNAME}"
+      "${restic_tags_arguments[@]}" "${excludes[@]}"
+    )
+    if isDebug || isTrue "$RESTIC_VERBOSE"; then
+      args+=(-vv)
+    fi
+    (cd "$SRC_DIR" &&
+          command restic backup "${args[@]}" "${includes_patterns[@]}" | log INFO
+    )
   }
   prune() {
     # We cannot use `grep -q` here - see https://github.com/restic/restic/issues/1466
@@ -339,6 +358,8 @@ restic() {
 }
 
 rclone() {
+  readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
+
   _find_old_backups() {
     command rclone lsf --format "tp" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}" | grep ${BACKUP_NAME} | awk \
             -v PRUNE_DATE="$(date '+%Y-%m-%d %H:%M:%S' --date="${PRUNE_BACKUPS_DAYS} days ago")" \
@@ -374,9 +395,7 @@ rclone() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    # sort files so that dat files are archived first
-    (cd "${SRC_DIR}" && { find . -type f -name "*.dat" -o -name "*.dat_old"; find . -type f -not -name "*.dat" -not -name "*.dat_old"; } ) |
-    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" -T - || exitCode=$?
+    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then

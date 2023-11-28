@@ -25,6 +25,9 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `RCON_PASSWORD_FILE`: Can be set to read the RCON password from a file. Overrides `RCON_PASSWORD` if both are set.
 - `RCON_RETRIES`=5 : Set to a negative value to retry indefinitely
 - `RCON_RETRY_INTERVAL`=10s
+- `INCLUDES`=. : comma separated list of directories to include relative to `/data` where `.` specifies all of `/data` should be included in the backup. 
+
+  **For Restic** the default is instead `/data` to remain backward compatible with previous images.
 - `EXCLUDES`=\*.jar,cache,logs,\*.tmp
 - `EXCLUDES_FILE`: Can be set to read the list of excludes (one per line) from a file. Can be used with `EXCLUDES` to add more excludes.
 - `BACKUP_METHOD`=tar
