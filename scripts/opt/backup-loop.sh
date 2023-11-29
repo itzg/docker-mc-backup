@@ -277,7 +277,7 @@ tar() {
 
 
 restic() {
-  readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-/data}")
+  readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-${SRC_DIR}}")
 
   _delete_old_backups() {
     # shellcheck disable=SC2086
