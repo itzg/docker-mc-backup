@@ -10,14 +10,18 @@ services:
     volumes:
       - mc:/data
   backup:
-    image: itzg/mc-backup
+    image: itzg/mc-backup:local
+    depends_on:
+      mc:
+        condition: service_healthy
     environment:
       RCON_HOST: mc
       BACKUP_METHOD: restic
-      INITIAL_DELAY: 1m
+      INITIAL_DELAY: 0
       RESTIC_PASSWORD: password
       RESTIC_REPOSITORY: /backups
       PRUNE_RESTIC_RETENTION: "--keep-daily 7 --keep-weekly 5"
+      RESTIC_VERBOSE: true
     volumes:
       - mc:/data:ro
       - backups:/backup

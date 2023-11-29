@@ -21,7 +21,7 @@ ADD https://github.com/itzg/mc-monitor/releases/download/${MC_MONITOR_VERSION}/m
 RUN tar x -f /tmp/mc-monitor.tar.gz -C /opt/ && \
     chmod +x /opt/mc-monitor
 
-ARG RESTIC_VERSION=0.15.2
+ARG RESTIC_VERSION=0.16.2
 
 # NOTE: restic releases don't differentiate arm v6 from v7, so TARGETVARIANT is not used
 # and have to assume they release armv7
@@ -31,7 +31,7 @@ RUN bunzip2 /tmp/restic.bz2 && \
     mv /tmp/restic /opt/restic && \
     chmod +x /opt/restic
 
-ARG DEMOTER_VERSION=0.4.0
+ARG DEMOTER_VERSION=0.4.2
 
 ADD https://github.com/itzg/entrypoint-demoter/releases/download/v${DEMOTER_VERSION}/entrypoint-demoter_${DEMOTER_VERSION}_Linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/entrypoint-demoter.tar.gz
 
