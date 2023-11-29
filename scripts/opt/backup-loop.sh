@@ -337,13 +337,12 @@ restic() {
     log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
     args=(
       --host "${RESTIC_HOSTNAME}"
-      "${restic_tags_arguments[@]}" "${excludes[@]}"
     )
     if isDebug || isTrue "$RESTIC_VERBOSE"; then
       args+=(-vv)
     fi
     (cd "$SRC_DIR" &&
-          command restic backup "${args[@]}" "${includes_patterns[@]}" | log INFO
+          command restic backup "${args[@]}" "${restic_tags_arguments[@]}" "${excludes[@]}" "${includes_patterns[@]}" | log INFO
     )
   }
   prune() {
