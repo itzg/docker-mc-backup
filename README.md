@@ -28,10 +28,11 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `INCLUDES`=. : comma separated list of include patterns relative to directory specified by `SRC_DIR` where `.` specifies all of that directory should be included in the backup. 
 
   **For Restic** the default is the value of `SRC_DIR` to remain backward compatible with previous images.
-- `EXCLUDES`=\*.jar,cache,logs,\*.tmp
+- `EXCLUDES`=\*.jar,cache,logs,\*.tmp : commas separated list of file patterns to exclude from the backup. To disable exclusions, set to an empty string.
 - `EXCLUDES_FILE`: Can be set to read the list of excludes (one per line) from a file. Can be used with `EXCLUDES` to add more excludes.
 - `BACKUP_METHOD`=tar
-- `RESTIC_ADDITIONAL_TAGS`=mc_backups
+- `RESTIC_ADDITIONAL_TAGS`=mc_backups : additional tags to apply to the backup. Set to an empty string to disable additional tags.
+- `RESTIC_VERBOSE`=false : set to "true" to enable verbose output during restic backup operation
 - `TZ` : Can be set to the timezone to use for logging
 - `PRE_SAVE_ALL_SCRIPT`, `PRE_BACKUP_SCRIPT`, `PRE_SAVE_ON_SCRIPT`, `POST_BACKUP_SCRIPT`, `*_SCRIPT_FILE`: See [Backup scripts](#backup-scripts)
 
