@@ -10,7 +10,7 @@ services:
     volumes:
       - mc:/data
   backup:
-    image: itzg/mc-backup:local
+    image: itzg/mc-backup
     depends_on:
       mc:
         condition: service_healthy
@@ -21,7 +21,6 @@ services:
       RESTIC_PASSWORD: password
       RESTIC_REPOSITORY: /backups
       PRUNE_RESTIC_RETENTION: "--keep-daily 7 --keep-weekly 5"
-      RESTIC_VERBOSE: true
     volumes:
       - mc:/data:ro
       - backups:/backup
