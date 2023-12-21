@@ -404,7 +404,9 @@ rclone() {
       exit 1
     fi
 
-    command rclone copy "${outFile}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"
+    if ! command rclone copy "${outFile}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"; then
+      log ERROR "rclone copy operation failed -- will retry next time"
+    fi
     rm "${outFile}"
   }
   prune() {
