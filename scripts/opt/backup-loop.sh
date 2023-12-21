@@ -21,7 +21,7 @@ fi
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
 : "${PAUSE_IF_NO_PLAYERS:=false}"
 : "${PLAYERS_ONLINE_CHECK_INTERVAL:=5m}"
-: "${BACKUP_METHOD:=tar}" # currently one of tar, restic
+: "${BACKUP_METHOD:=tar}" # currently one of tar, restic, rsync
 : "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip zstd
 : "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
@@ -264,6 +264,44 @@ tar() {
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
       ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
+    fi
+  }
+  prune() {
+    if [ -n "$(_find_old_backups -print -quit)" ]; then
+      log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
+      _find_old_backups -print -delete | awk '{ printf "Removing %s\n", $0 }' | log INFO
+    fi
+  }
+  call_if_function_exists "${@}"
+}
+
+rsync() {
+  readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
+
+  _find_old_backups() {
+    find "${DEST_DIR}" -maxdepth 1 -type d -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
+  }
+
+  init() {
+    mkdir -p "${DEST_DIR}"
+  }
+  backup() {
+    ts=$(date +"%Y%m%d-%H%M%S")
+    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}"
+    PREV_DIR=$(ls -t "$DEST_DIR" | head -1)
+    log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
+    mkdir -p $outFile
+    command rsync -a --link-dest "${PREV_DIR}" "${excludes[@]}" "${includes_patterns[@]}" "${SRC_DIR}/" "${outFile}/"  || exitCode=$?
+    if [ ${exitCode:-0} -eq 0 ]; then
+      true
+    elif [ ${exitCode:-0} -eq 1 ]; then
+      log WARN "Dat files changed as we read it"
+    elif [ ${exitCode:-0} -gt 1 ]; then
+      log ERROR "rsync exited with code ${exitCode}! Aborting"
+      exit 1
+    fi
+    if [ "${LINK_LATEST^^}" == "TRUE" ]; then
+      ln -s "${BACKUP_NAME}-${ts}" "${DEST_DIR}/latest"
     fi
   }
   prune() {

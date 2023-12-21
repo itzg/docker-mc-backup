@@ -57,6 +57,7 @@ RUN apk -U --no-cache add \
     openssh-client \
     tar \
     tzdata \
+    rsync \
     zstd
 
 
