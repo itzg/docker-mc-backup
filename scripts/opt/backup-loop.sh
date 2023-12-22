@@ -289,11 +289,12 @@ rsync() {
     if [ -d "${DEST_DIR}/latest" ]; then
       log INFO "Latest found so using it for link"
       link_dest=("--link-dest" "${DEST_DIR}/latest")
-    elif [ $(ls -d "${DEST_DIR}/${BACKUP_NAME}-"* | wc -l ) ]; then
+    elif [ $(ls "${DEST_DIR}" | wc -l ) -lt 1 ]; then  
+      log INFO "No previous backups. Running full"
+      link_dest=()
+    else
       log INFO "Searching for latest backup to link with"
       link_dest=("--link-dest" $(ls -td "${DEST_DIR}/${BACKUP_NAME}-"*|head -1))
-    else
-      link_dest=()
     fi
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     mkdir -p $outFile
