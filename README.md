@@ -67,6 +67,13 @@ If `PAUSE_IF_NO_PLAYERS`="true" and there are no players online after a backup i
 
 `ZSTD_PARAMETERS` sets the parameters for `zstd` compression. The `--long` parameter affects RAM requirements for both compression and decompression (the default of 25 means 2^25 bytes = 32 MB).
 
+##### `rsync` backup method
+
+- `DEST_DIR`=/backups
+- `LINK_LATEST`=false
+
+`LINK_LATEST` is a true/false flag that creates a symbolic link to the latest backup.
+
 ##### `restic` backup method
 
 See [restic documentation](https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html) on what variables are needed to be defined.
@@ -140,6 +147,15 @@ This image includes a script called `restore-backup` which will:
 1. Check if the `$SRC_DIR` (default is `/data`) is empty
 2. and if any files are available in `$DEST_DIR` (default is `/backups`), 
 3. then un-tars the newest one into `$SRC_DIR`
+
+The [compose file example](#docker-compose) shows creating an "init container" to run the restore
+
+## Restoring rsync backups
+
+This image includes a script called `restore-rsync-backup` which will:
+1. Check if the `$SRC_DIR` (default is `/data`) is empty
+2. and if any folders are available in `$DEST_DIR` (default is `/backups`), 
+3. then rsyncs back the newest one into `$SRC_DIR`
 
 The [compose file example](#docker-compose) shows creating an "init container" to run the restore
 
