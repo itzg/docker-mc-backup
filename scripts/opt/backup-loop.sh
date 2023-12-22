@@ -276,8 +276,6 @@ tar() {
 }
 
 rsync() {
-  readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
-
   _find_old_backups() {
     find "${DEST_DIR}" -maxdepth 1 -type d -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
   }
@@ -288,10 +286,18 @@ rsync() {
   backup() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}"
-    PREV_DIR=$(ls -t "$DEST_DIR" | head -1)
+    if [ -d "${DEST_DIR}/latest" ]; then
+      log INFO "Latest found so using it for link"
+      link_dest=("--link-dest" "${DEST_DIR}/latest")
+    elif [ $(ls -d "${DEST_DIR}/${BACKUP_NAME}-"* | wc -l ) ]; then
+      log INFO "Searching for latest backup to link with"
+      link_dest=("--link-dest" $(ls -td "${DEST_DIR}/${BACKUP_NAME}-"*|head -1))
+    else
+      link_dest=()
+    fi
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     mkdir -p $outFile
-    command rsync -a --link-dest "${PREV_DIR}" "${excludes[@]}" "${includes_patterns[@]}" "${SRC_DIR}/" "${outFile}/"  || exitCode=$?
+    command rsync -a "${link_dest[@]}" "${excludes[@]}" "${SRC_DIR}/" "${outFile}/"  || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
