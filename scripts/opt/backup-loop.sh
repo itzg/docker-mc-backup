@@ -314,7 +314,7 @@ rsync() {
   prune() {
     if [ -n "$(_find_old_backups -print -quit)" ]; then
       log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
-      _find_old_backups -print -delete | awk '{ printf "Removing %s\n", $0 }' | log INFO
+      _find_old_backups -print -exec rm -r {} + | awk '{ printf "Removing %s\n", $0 }' | log INFO
     fi
   }
   call_if_function_exists "${@}"
