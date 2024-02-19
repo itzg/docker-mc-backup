@@ -308,7 +308,7 @@ rsync() {
       exit 1
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
-      ln -s "${BACKUP_NAME}-${ts}" "${DEST_DIR}/latest"
+      ln -sf "${BACKUP_NAME}-${ts}" "${DEST_DIR}/latest"
     fi
   }
   prune() {
