@@ -289,7 +289,7 @@ services:
   restore-backup:
     # Same image as mc, but any base image with bash and tar will work
     image: itzg/mc-backup
-    restart: no
+    restart: "no"
     entrypoint: restore-tar-backup
     volumes:
       # Must be same mount as mc service, needs to be writable
