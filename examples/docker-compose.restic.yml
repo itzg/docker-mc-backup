@@ -23,7 +23,7 @@ services:
       PRUNE_RESTIC_RETENTION: "--keep-daily 7 --keep-weekly 5"
     volumes:
       - mc:/data:ro
-      - backups:/backup
+      - backups:/backups
 
 volumes:
   mc: {}
