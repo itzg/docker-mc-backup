@@ -300,6 +300,7 @@ rsync() {
     mkdir -p $outFile
     command rsync -a "${link_dest[@]}" "${excludes[@]}" "${SRC_DIR}/" "${outFile}/"  || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
+      touch "${outFile}"
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
       log WARN "Dat files changed as we read it"
