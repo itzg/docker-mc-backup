@@ -18,13 +18,14 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `PLAYERS_ONLINE_CHECK_INTERVAL`=5m
 - `PRUNE_BACKUPS_DAYS`=7
 - `PRUNE_RESTIC_RETENTION`=--keep-within 7d
-- `SERVER_PORT`=25565
 - `RCON_HOST`=localhost
 - `RCON_PORT`=25575
 - `RCON_PASSWORD`=minecraft
 - `RCON_PASSWORD_FILE`: Can be set to read the RCON password from a file. Overrides `RCON_PASSWORD` if both are set.
 - `RCON_RETRIES`=5 : Set to a negative value to retry indefinitely
 - `RCON_RETRY_INTERVAL`=10s
+- `SERVER_HOST`=`RCON_HOST` : Can be set if the game and RCON are accessible on different addresses.
+- `SERVER_PORT`=25565
 - `INCLUDES`=. : comma separated list of include patterns relative to directory specified by `SRC_DIR` where `.` specifies all of that directory should be included in the backup. 
 
   **For Restic** the default is the value of `SRC_DIR` to remain backward compatible with previous images.

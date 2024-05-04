@@ -26,9 +26,10 @@ fi
 : "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
-: "${SERVER_PORT:=25565}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
+: "${SERVER_HOST:=${RCON_HOST}}"
+: "${SERVER_PORT:=25565}"
 
 : "${RCON_RETRIES:=5}"
 : "${RCON_RETRY_INTERVAL:=10s}"
@@ -591,7 +592,7 @@ while true; do
     while true; do
       if [ -e "${SRC_DIR}/.paused" ]; then
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
-      elif ! PLAYERS_ONLINE=$(mc-monitor status --host "${RCON_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
+      elif ! PLAYERS_ONLINE=$(mc-monitor status --host "${SERVER_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
         log ERROR "Error querying the server, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
       elif [ "${PLAYERS_ONLINE}" = 0 ]; then
