@@ -471,6 +471,12 @@ rclone() {
 ## main ##
 ##########
 
+if [[ $PRE_SAVE_ALL_SCRIPT ]]; then
+  PRE_SAVE_ALL_SCRIPT_FILE=/tmp/pre-save-all
+  printf '#!/bin/bash\n\n%s' "$PRE_SAVE_ALL_SCRIPT" > "$PRE_SAVE_ALL_SCRIPT_FILE"
+  chmod 700 "$PRE_SAVE_ALL_SCRIPT_FILE"
+fi
+
 if [[ $PRE_BACKUP_SCRIPT ]]; then
   PRE_BACKUP_SCRIPT_FILE=/tmp/pre-backup
   printf '#!/bin/bash\n\n%s' "$PRE_BACKUP_SCRIPT" > "$PRE_BACKUP_SCRIPT_FILE"
