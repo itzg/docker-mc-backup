@@ -17,6 +17,7 @@ services:
   restore-backup:
     # Same image as mc, but any base image with bash and tar will work
     image: itzg/mc-backup
+    user: "1000"
     restart: no
     entrypoint: restore-tar-backup
     volumes:
@@ -26,6 +27,7 @@ services:
       - ./mc-backups:/backups:ro
   backups:
     image: itzg/mc-backup
+    user: "1000"
     depends_on:
       mc:
         condition: service_healthy
