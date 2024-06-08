@@ -75,6 +75,10 @@ is_one_shot() {
   fi
 }
 
+is_paused() {
+    [[ -e "${SRC_DIR}/.paused" ]]
+}
+
 is_elem_in_array() {
   # $1 = element
   # All remaining arguments are array to search for the element in
@@ -539,22 +543,50 @@ fi
 
 
 while true; do
-  load_rcon_password
+  if ! is_paused; then
 
-  log INFO "waiting for rcon readiness..."
-  retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
+    load_rcon_password
 
-  if [[ $PRE_SAVE_ALL_SCRIPT_FILE ]]; then
-    "$PRE_SAVE_ALL_SCRIPT_FILE"
-  fi
+    log INFO "waiting for rcon readiness..."
+    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
 
-  if retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-off; then
-    # No matter what we were doing, from now on if the script crashes
-    # or gets shut down, we want to make sure saving is on
-    trap 'retry 5 5s rcon-cli save-on' EXIT
+    if [[ $PRE_SAVE_ALL_SCRIPT_FILE ]]; then
+      "$PRE_SAVE_ALL_SCRIPT_FILE"
+    fi
 
-    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
-    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
+    if retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-off; then
+      # No matter what we were doing, from now on if the script crashes
+      # or gets shut down, we want to make sure saving is on
+      trap 'retry 5 5s rcon-cli save-on' EXIT
+
+      retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
+      retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
+
+      if [[ $PRE_BACKUP_SCRIPT_FILE ]]; then
+        "$PRE_BACKUP_SCRIPT_FILE"
+      fi
+
+      "${BACKUP_METHOD}" backup
+
+      if [[ $PRE_SAVE_ON_SCRIPT_FILE ]]; then
+        "$PRE_SAVE_ON_SCRIPT_FILE"
+      fi
+
+      retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
+
+      # Remove our exit trap now
+      trap EXIT
+
+      if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
+        "$POST_BACKUP_SCRIPT_FILE"
+      fi
+
+    else
+      log ERROR "Unable to turn saving off. Is the server running?"
+      exit 1
+    fi
+  else # paused
+    log INFO "Server is paused, proceeding with backup"
 
     if [[ $PRE_BACKUP_SCRIPT_FILE ]]; then
       "$PRE_BACKUP_SCRIPT_FILE"
@@ -562,22 +594,9 @@ while true; do
 
     "${BACKUP_METHOD}" backup
 
-    if [[ $PRE_SAVE_ON_SCRIPT_FILE ]]; then
-      "$PRE_SAVE_ON_SCRIPT_FILE"
-    fi
-
-    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
-
-    # Remove our exit trap now
-    trap EXIT
-    
     if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
       "$POST_BACKUP_SCRIPT_FILE"
     fi
-
-  else
-    log ERROR "Unable to turn saving off. Is the server running?"
-    exit 1
   fi
 
   if (( PRUNE_BACKUPS_DAYS > 0 )); then
@@ -596,7 +615,7 @@ while true; do
 
   if [[ ${PAUSE_IF_NO_PLAYERS^^} = TRUE ]]; then
     while true; do
-      if [ -e "${SRC_DIR}/.paused" ]; then
+      if is_paused; then
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
       elif ! PLAYERS_ONLINE=$(mc-monitor status --host "${SERVER_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
         log ERROR "Error querying the server, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
