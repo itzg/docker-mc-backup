@@ -24,7 +24,7 @@ services:
       # and change the above to
       # - rclone-config:/config/rclone
       - mc:/data:ro
-      - backups:/backup
+      - backups:/backups
 
 volumes:
   # Uncomment this if using the config step above
