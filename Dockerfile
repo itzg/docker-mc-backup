@@ -7,21 +7,21 @@ ARG TARGETVARIANT
 
 RUN mkdir -p /opt
 
-ARG RCON_CLI_VERSION=1.6.2
+ARG RCON_CLI_VERSION=1.6.7
 
 ADD https://github.com/itzg/rcon-cli/releases/download/${RCON_CLI_VERSION}/rcon-cli_${RCON_CLI_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/rcon-cli.tar.gz
 
 RUN tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
     chmod +x /opt/rcon-cli
 
-ARG MC_MONITOR_VERSION=0.12.8
+ARG MC_MONITOR_VERSION=0.12.12
 
 ADD https://github.com/itzg/mc-monitor/releases/download/${MC_MONITOR_VERSION}/mc-monitor_${MC_MONITOR_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/mc-monitor.tar.gz
 
 RUN tar x -f /tmp/mc-monitor.tar.gz -C /opt/ && \
     chmod +x /opt/mc-monitor
 
-ARG RESTIC_VERSION=0.16.2
+ARG RESTIC_VERSION=0.16.4
 
 # NOTE: restic releases don't differentiate arm v6 from v7, so TARGETVARIANT is not used
 # and have to assume they release armv7
@@ -31,14 +31,14 @@ RUN bunzip2 /tmp/restic.bz2 && \
     mv /tmp/restic /opt/restic && \
     chmod +x /opt/restic
 
-ARG DEMOTER_VERSION=0.4.2
+ARG DEMOTER_VERSION=0.4.4
 
 ADD https://github.com/itzg/entrypoint-demoter/releases/download/v${DEMOTER_VERSION}/entrypoint-demoter_${DEMOTER_VERSION}_Linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/entrypoint-demoter.tar.gz
 
 RUN tar x -f /tmp/entrypoint-demoter.tar.gz -C /opt/ && \
     chmod +x /opt/entrypoint-demoter
 
-ARG RCLONE_VERSION=1.62.2
+ARG RCLONE_VERSION=1.67.0
 
 ADD https://downloads.rclone.org/v${RCLONE_VERSION}/rclone-v${RCLONE_VERSION}-linux-${TARGETARCH}.zip /tmp/rclone.zip
 
