@@ -288,7 +288,7 @@ tar() {
 
     if [ -n "${PRUNE_BACKUPS_COUNT}" ] && [ "${PRUNE_BACKUPS_COUNT}" -gt 0 ]; then
       log INFO "Pruning backup files to keep only the latest ${PRUNE_BACKUPS_COUNT} backups"
-      _find_extra_backups | xargs -0 -I {} sh -c 'rm -v "{}"' | log INFO
+      _find_extra_backups | xargs -n 1 rm -v | log INFO
     fi
   }
   call_if_function_exists "${@}"
