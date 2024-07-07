@@ -300,7 +300,7 @@ rsync() {
   }
 
   _find_extra_backups() {
-    find "${DEST_DIR}" -maxdepth 1 -type d ! -path "${DEST_DIR}" -print0  -exec ls -NtArd {} \+ | \
+    find "${DEST_DIR}" -maxdepth 1 -type d ! -path "${DEST_DIR}" -print0  -exec ls -NtAd {} \+ | \
     tail -n +$((PRUNE_BACKUPS_COUNT + 1)) | \
     tr '\n' '\0'
   }
