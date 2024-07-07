@@ -232,12 +232,8 @@ tar() {
   }
 
   _find_extra_backups() {
-  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -print0 | \
-    xargs -0 stat --format '%Y %n' | \
-    sort -n | \
-    awk '{print $2}' | \
-    tail -n +$((PRUNE_BACKUPS_COUNT + 1)) | \
-    tr '\n' '\0'
+  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -exec ls -t {} \+ | \
+    tail -n +$((PRUNE_BACKUPS_COUNT + 1))
   }
 
   init() {
