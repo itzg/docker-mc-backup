@@ -25,7 +25,7 @@ fi
 : "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip zstd
 : "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
-  "${PRUNE_BACKUPS_COUNT:=}"
+:  "${PRUNE_BACKUPS_COUNT:=}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
