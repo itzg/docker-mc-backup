@@ -25,7 +25,7 @@ fi
 : "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip zstd
 : "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
-:  "${PRUNE_BACKUPS_COUNT:=}"
+: "${PRUNE_BACKUPS_COUNT:=}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
@@ -232,7 +232,7 @@ tar() {
   }
 
   _find_extra_backups() {
-  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -exec ls -t {} \+ | \
+  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -exec ls -NtA {} \+ | \
     tail -n +$((PRUNE_BACKUPS_COUNT + 1))
   }
 
@@ -300,10 +300,7 @@ rsync() {
   }
 
   _find_extra_backups() {
-    find "${DEST_DIR}" -maxdepth 1 -type d ! -path "${DEST_DIR}" -print0 | \
-    xargs -0 stat --format '%Y %n' | \
-    sort -n | \
-    awk '{print $2}' | \
+    find "${DEST_DIR}" -maxdepth 1 -type d ! -path "${DEST_DIR}" -print0  -exec ls -NtArd {} \+ | \
     tail -n +$((PRUNE_BACKUPS_COUNT + 1)) | \
     tr '\n' '\0'
   }
@@ -351,7 +348,7 @@ rsync() {
 
     if [ -n "${PRUNE_BACKUPS_COUNT}" ] && [ "${PRUNE_BACKUPS_COUNT}" -gt 0 ]; then
       log INFO "Pruning backup files to keep only the latest ${PRUNE_BACKUPS_COUNT} backups"
-      _find_extra_backups | xargs -0 -I {} sh -c 'rm -rv "{}"' | awk -v dest_dir="${DEST_DIR}" '
+      _find_extra_backups | xargs -0 -I {} rm -rv {} | awk -v dest_dir="${DEST_DIR}" '
   {
     sub(/removed directory /, "")
     if ($0 !~ dest_dir "/.*/.*") {
