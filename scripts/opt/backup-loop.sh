@@ -25,6 +25,7 @@ fi
 : "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip zstd
 : "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
+: "${PRUNE_BACKUPS_COUNT:=}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
 : "${RCON_HOST:=localhost}"
 : "${RCON_PORT:=25575}"
@@ -230,6 +231,11 @@ tar() {
     find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
   }
 
+  _find_extra_backups() {
+  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -exec ls -NtA {} \+ | \
+    tail -n +$((PRUNE_BACKUPS_COUNT + 1))
+  }
+
   init() {
     mkdir -p "${DEST_DIR}"
     case "${TAR_COMPRESS_METHOD}" in
@@ -272,9 +278,17 @@ tar() {
     fi
   }
   prune() {
-    log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
-    if [ -n "$(_find_old_backups -print -quit)" ]; then
-      _find_old_backups -print -delete | awk '{ printf "Removing %s\n", $0 }' | log INFO
+
+    if [ -n "${PRUNE_BACKUPS_DAYS}" ] && [ "${PRUNE_BACKUPS_DAYS}" -gt 0 ]; then
+      log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
+      if [ -n "$(_find_old_backups -print -quit)" ]; then
+        _find_old_backups -print -delete | awk '{ printf "Removing %s\n", $0 }' | log INFO
+      fi
+    fi
+
+    if [ -n "${PRUNE_BACKUPS_COUNT}" ] && [ "${PRUNE_BACKUPS_COUNT}" -gt 0 ]; then
+      log INFO "Pruning backup files to keep only the latest ${PRUNE_BACKUPS_COUNT} backups"
+      _find_extra_backups | xargs -n 1 rm -v | log INFO
     fi
   }
   call_if_function_exists "${@}"
@@ -283,6 +297,12 @@ tar() {
 rsync() {
   _find_old_backups() {
     find "${DEST_DIR}" -maxdepth 1 -type d -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
+  }
+
+  _find_extra_backups() {
+    find "${DEST_DIR}" -maxdepth 1 -type d ! -path "${DEST_DIR}" -print0  -exec ls -NtAd {} \+ | \
+    tail -n +$((PRUNE_BACKUPS_COUNT + 1)) | \
+    tr '\n' '\0'
   }
 
   init() {
@@ -318,9 +338,23 @@ rsync() {
     fi
   }
   prune() {
-    if [ -n "$(_find_old_backups -print -quit)" ]; then
+
+    if [ -n "${PRUNE_BACKUPS_DAYS}" ] && [ "${PRUNE_BACKUPS_DAYS}" -gt 0 ]; then
+      if [ -n "$(_find_old_backups -print -quit)" ]; then
       log INFO "Pruning backup files older than ${PRUNE_BACKUPS_DAYS} days"
-      _find_old_backups -print -exec rm -r {} + | awk '{ printf "Removing %s\n", $0 }' | log INFO
+        _find_old_backups -print -exec rm -r {} + | awk '{ printf "Removing %s\n", $0 }' | log INFO
+      fi
+    fi
+
+    if [ -n "${PRUNE_BACKUPS_COUNT}" ] && [ "${PRUNE_BACKUPS_COUNT}" -gt 0 ]; then
+      log INFO "Pruning backup files to keep only the latest ${PRUNE_BACKUPS_COUNT} backups"
+      _find_extra_backups | xargs -0 -I {} rm -rv {} | awk -v dest_dir="${DEST_DIR}" '
+  {
+    sub(/removed directory /, "")
+    if ($0 !~ dest_dir "/.*/.*") {
+      printf "Removing %s\n", $0
+    }
+  }'| log INFO
     fi
   }
   call_if_function_exists "${@}"
