@@ -288,7 +288,7 @@ tar() {
 
     if [ -n "${PRUNE_BACKUPS_COUNT}" ] && [ "${PRUNE_BACKUPS_COUNT}" -gt 0 ]; then
       log INFO "Pruning backup files to keep only the latest ${PRUNE_BACKUPS_COUNT} backups"
-      _find_extra_backups | xargs -n 1 rm -v | log INFO
+      _find_extra_backups | xargs -r -n 1 rm -v | log INFO
     fi
   }
   call_if_function_exists "${@}"
@@ -348,7 +348,7 @@ rsync() {
 
     if [ -n "${PRUNE_BACKUPS_COUNT}" ] && [ "${PRUNE_BACKUPS_COUNT}" -gt 0 ]; then
       log INFO "Pruning backup files to keep only the latest ${PRUNE_BACKUPS_COUNT} backups"
-      _find_extra_backups | xargs -0 -I {} rm -rv {} | awk -v dest_dir="${DEST_DIR}" '
+      _find_extra_backups | xargs -r -0 -I {} rm -rv {} | awk -v dest_dir="${DEST_DIR}" '
   {
     sub(/removed directory /, "")
     if ($0 !~ dest_dir "/.*/.*") {
