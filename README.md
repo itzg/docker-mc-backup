@@ -8,10 +8,11 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 
 ## Environment variables
 
-##### Common variables:
+### Common variables
 
 - `SRC_DIR`=/data
 - `BACKUP_NAME`=world
+- `BACKUP_METHOD`=tar
 - `INITIAL_DELAY`=2m
 - `BACKUP_INTERVAL`=24h
 - `PAUSE_IF_NO_PLAYERS`=false
@@ -32,7 +33,6 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
   **For Restic** the default is the value of `SRC_DIR` to remain backward compatible with previous images.
 - `EXCLUDES`=\*.jar,cache,logs,\*.tmp : commas separated list of file patterns to exclude from the backup. To disable exclusions, set to an empty string.
 - `EXCLUDES_FILE`: Can be set to read the list of excludes (one per line) from a file. Can be used with `EXCLUDES` to add more excludes.
-- `BACKUP_METHOD`=tar
 - `RESTIC_ADDITIONAL_TAGS`=mc_backups : additional tags to apply to the backup. Set to an empty string to disable additional tags.
 - `RESTIC_VERBOSE`=false : set to "true" to enable verbose output during restic backup operation
 - `TZ` : Can be set to the timezone to use for logging
@@ -56,7 +56,11 @@ If `PAUSE_IF_NO_PLAYERS`="true" and there are no players online after a backup i
 
 `EXCLUDES` is a comma-separated list of glob(3) patterns to exclude from backups. By default excludes all jar files (plugins, server files), logs folder and cache (used by i.e. PaperMC server).
 
-##### `tar` backup method
+### Backup methods
+
+Set `BACKUP_METHOD` to one of the following, where the default is `tar`.
+
+#### `tar`
 
 - `DEST_DIR`=/backups
 - `LINK_LATEST`=false
@@ -69,14 +73,14 @@ If `PAUSE_IF_NO_PLAYERS`="true" and there are no players online after a backup i
 
 `ZSTD_PARAMETERS` sets the parameters for `zstd` compression. The `--long` parameter affects RAM requirements for both compression and decompression (the default of 25 means 2^25 bytes = 32 MB).
 
-##### `rsync` backup method
+#### `rsync`
 
 - `DEST_DIR`=/backups
 - `LINK_LATEST`=false
 
 `LINK_LATEST` is a true/false flag that creates a symbolic link to the latest backup.
 
-##### `restic` backup method
+#### `restic`
 
 See [restic documentation](https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html) on what variables are needed to be defined.
 At least one of `RESTIC_PASSWORD*` variables need to be defined, along with `RESTIC_REPOSITORY`.
@@ -101,7 +105,7 @@ You can fine tune the retention cycle of the restic backups using the `PRUNE_RES
 
 - Information about required S3 permissions [can be found here](https://restic.readthedocs.io/en/latest/080_examples.html)
 
-##### `rclone` backup method
+#### `rclone`
 Rclone acts as the `tar` backup method but automatically moves the compressed files to a remote drive via [rclone](https://rclone.org/).
 
 There are a few special environment variables for the rclone method.
