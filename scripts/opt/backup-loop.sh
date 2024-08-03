@@ -624,9 +624,6 @@ while true; do
       log ERROR "Unable to turn saving off. Is the server running?"
       exit 1
     fi
-  elif [[ $first_run == TRUE && ${BACKUP_ON_STARTUP^^} = FALSE ]]; then
-    log INFO "Skipping backup on startup"
-    first_run=false
   else # paused
     log INFO "Server is paused, proceeding with backup"
 
