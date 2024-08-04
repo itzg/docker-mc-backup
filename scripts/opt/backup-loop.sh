@@ -19,6 +19,7 @@ fi
 : "${BACKUP_NAME:=world}"
 : "${INITIAL_DELAY:=2m}"
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
+: "${BACKUP_ON_STARTUP:=true}"
 : "${PAUSE_IF_NO_PLAYERS:=false}"
 : "${PLAYERS_ONLINE_CHECK_INTERVAL:=5m}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic, rsync
@@ -575,9 +576,13 @@ if ! is_one_shot; then
   sleep ${INITIAL_DELAY}
 fi
 
+first_run=TRUE
 
 while true; do
-  if ! is_paused; then
+  if [[ $first_run == TRUE && ${BACKUP_ON_STARTUP^^} = FALSE ]]; then
+    log INFO "Skipping backup on startup"
+    first_run=false
+  elif ! is_paused; then
 
     load_rcon_password
 

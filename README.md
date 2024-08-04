@@ -15,6 +15,7 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `BACKUP_METHOD`=tar  : [see below](#backup-methods)
 - `INITIAL_DELAY`=2m
 - `BACKUP_INTERVAL`=24h
+- `BACKUP_ON_STARTUP`=true : Set to false to skip first backup on startup.
 - `PAUSE_IF_NO_PLAYERS`=false
 - `PLAYERS_ONLINE_CHECK_INTERVAL`=5m
 - `PRUNE_BACKUPS_DAYS`=7
