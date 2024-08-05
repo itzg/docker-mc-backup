@@ -2,3 +2,7 @@
 /.idea/
 /examples/mc-backups
 /*.code-workspace
+
+# Tests
+/tests/*/data
+/tests/*/backups

@@ -579,7 +579,7 @@ fi
 first_run=TRUE
 
 while true; do
-  if [[ $first_run == TRUE && ${BACKUP_ON_STARTUP^^} = FALSE ]]; then
+  if [[ $first_run == TRUE && ${ONE_SHOT^^} = FALSE && ${BACKUP_ON_STARTUP^^} = FALSE ]]; then
     log INFO "Skipping backup on startup"
     first_run=false
   elif ! is_paused; then

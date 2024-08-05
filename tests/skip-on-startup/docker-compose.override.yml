@@ -1,0 +1,4 @@
+services:
+  backup:
+    environment:
+      BACKUP_ON_STARTUP: false
