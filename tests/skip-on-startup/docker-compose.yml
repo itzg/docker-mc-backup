@@ -1,0 +1,33 @@
+services:
+  mc:
+    image: itzg/minecraft-server
+    restart: always
+    tty: true
+    stdin_open: true
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      ENABLE_AUTOPAUSE: "TRUE"
+      AUTOPAUSE_TIMEOUT_EST: 30
+    volumes:
+      - "./data:/data"
+
+  backup:
+    restart: "no"
+    build: ../../
+    depends_on:
+      mc:
+        condition: service_healthy
+    environment:
+      BACKUP_INTERVAL: "1h"
+      RCON_HOST: mc
+      INITIAL_DELAY: 0
+      PAUSE_IF_NO_PLAYERS: true
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    volumes:
+      - "./data:/data:ro"
+      - "./backups:/backups"
