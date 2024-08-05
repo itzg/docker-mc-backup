@@ -3,78 +3,85 @@
 mkdir -p ./backups
 mkdir -p ./data
 
-cleanup() {
+get_backup_count() {
+  backup_count=$(ls -1 backups | wc -l)
+  echo "Output: ${backup_count} backups"
+}
+
+cleanup_backups() {
   rm -rf ./backups/*
+}
+
+cleanup_all() {
+  docker compose down
+  cleanup_backups
   rm -rf ./data/*
 }
 
-# Set inital state to PASS
-overall_status=0
+## Clean up upon failure or reaching the end
+trap cleanup_all EXIT
 
-# Build from current filesystem
-echo "BUILDING..."
-docker compose build > /dev/null
+setup() {
+  # Set inital exit state to PASS (0)
+  overall_status=0
 
-#
-# BACKUP_ON_STARTUP = true (default)
-#
+  # Build from current filesystem
+  echo "Building..."
+  docker compose build > /dev/null
 
-echo "Test 1 - BACKUP_ON_STARTUP = true"
+  echo "Starting server..."
+  rm -rf ./data/*
+  docker compose up mc -d > /dev/null
+}
 
-cleanup
-docker compose -f docker-compose.yml up -d > /dev/null
-sleep 20 # Wait for backup to run TODO: Use a more robust method
-backup_count=$(ls -1 backups | wc -l)
-echo "Output: ${backup_count} backups"
+run_test1(){
+  echo -e "\nTest 1: BACKUP_ON_STARTUP=true"
+  cleanup_backups
+  docker compose -f docker-compose.yml up backup -d > /dev/null
+  sleep 5
+  get_backup_count
 
-if [ 1 -eq "$(ls -1 backups | wc -l)" ]; then
-  echo "PASS"
-else
-  echo "FAIL"
-  overall_status=1
-fi
+  if [ 1 -eq "$backup_count" ]; then
+    echo "PASS"
+  else
+    echo "FAIL"
+    overall_status=1
+  fi
+}
 
-#
-# BACKUP_ON_STARTUP = false
-#
+run_test2() {
+  echo -e "\nTest 2: BACKUP_ON_STARTUP=false"
+  cleanup_backups
+  docker compose -f docker-compose.yml -f docker-compose.override.yml up backup -d > /dev/null
+  sleep 5
+  get_backup_count
 
-echo "Test 2 - BACKUP_ON_STARTUP = false"
+  if [ 0 -eq "$backup_count" ]; then
+    echo "PASS"
+  else
+    echo "FAIL"
+    overall_status=1
+  fi
+}
 
-cleanup
-docker compose -f docker-compose.yml -f docker-compose.override.yml up -d > /dev/null
-sleep 20 # Wait for backup to run TODO: Use a more robust method
-backup_count=$(ls -1 backups | wc -l)
-echo "Output: ${backup_count} backups"
+run_test3() {
+  echo -e "\nTest 3: BACKUP_ON_STARTUP=false, ONE_SHOT=true"
+  cleanup_backups
+  docker compose exec backup backup now > /dev/null
+  get_backup_count
 
-if [ 0 -eq "$(ls -1 backups | wc -l)" ]; then
-  echo "PASS"
-else
-  echo "FAIL"
-  overall_status=1
-fi
+  if [ 1 -eq "$backup_count" ]; then
+    echo "PASS"
+  else
+    echo "FAIL"
+    overall_status=1
+  fi
+}
 
-#
-# BACKUP_ON_STARUP = false, ONE_SHOT
-#
-
-echo "Test 3 - BACKUP_ON_STARTUP = false, ONE_SHOT"
-
-cleanup
-docker compose exec backup backup now > /dev/null
-sleep 20 # Wait for backup to run TODO: Use a more robust method
-backup_count=$(ls -1 backups | wc -l)
-echo "Output: ${backup_count} backups"
-
-if [ 1 -eq "$(ls -1 backups | wc -l)" ]; then
-  echo "PASS"
-else
-  echo "FAIL"
-  overall_status=1
-fi
-
-# Clean up
-docker compose down
-cleanup
+setup
+run_test1
+run_test2
+run_test3
 
 exit $overall_status
 
