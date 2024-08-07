@@ -1,0 +1,4 @@
+services:
+  backup:
+    environment:
+      PRESERVE_MANUAL_BACKUPS: true
