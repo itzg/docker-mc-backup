@@ -60,7 +60,7 @@ run_test1(){
 }
 
 run_test2(){
-  echo -e "\nTest 1: Ensure added suffix and preserved are not pruned"
+  echo -e "\nTest 2: Ensure added suffix and preserved are not pruned"
   cleanup_backups
 
   # Two old backups
@@ -73,6 +73,8 @@ run_test2(){
   preserved_backup_count=$(find backups/ -name "*.tgz" -name "*preserve*" | wc -l)
   not_preserved_backup_count=$(find backups/ -name "*.tgz" -not -name "*preserve*" | wc -l)
   
+  tree backups
+  
   echo "Preserved backups: ${preserved_backup_count}"
   echo "Not-Preserved backups: ${not_preserved_backup_count}"
 
@@ -81,7 +83,7 @@ run_test2(){
   # 0 not preserved (1 pruned)
   if [[ 2 -eq "$preserved_backup_count" && 0 -eq "$not_preserved_backup_count" ]]; then
     echo "PASS"
-    else
+  else
     echo "FAIL"
     overall_status=1
   fi
