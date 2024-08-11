@@ -67,7 +67,7 @@ jobs:
           RESTIC_PASSWORD: 1234
         run: ./tests/test.simple.restic.sh
 
-      - name: Test skipt on startup
+      - name: Test skip on startup
         run: ./tests/skip-on-startup/test.skip-on-startup.sh
 
       - name: Test preserve manual backups

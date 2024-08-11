@@ -78,10 +78,12 @@ is_one_shot() {
   fi
 }
 
+PRESERVE_SUFFIX="-preserve"
+
 if is_one_shot && [[ "${PRESERVE_MANUAL_BACKUPS^^}" = TRUE ]]; then
-  preserve_suffix="-preserve"
+  suffix="-preserve"
 else 
-  preserve_suffix=""
+  suffix=""
 fi
 
 is_paused() {
@@ -236,11 +238,11 @@ tar() {
   readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
 
   _find_old_backups() {
-    find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -not -name "*${preserve_suffix}*" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
+    find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -not -name "*${PRESERVE_SUFFIX}*" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
   }
 
   _find_extra_backups() {
-  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -not -name "*${preserve_suffix}*" -exec ls -NtA {} \+ | \
+  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -not -name "*${PRESERVE_SUFFIX}*" -exec ls -NtA {} \+ | \
     tail -n +$((PRUNE_BACKUPS_COUNT + 1))
   }
 
@@ -270,7 +272,7 @@ tar() {
   }
   backup() {
     ts=$(date +"%Y%m%d-%H%M%S")
-    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}${preserve_suffix}.${backup_extension}"
+    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}${suffix}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
@@ -282,7 +284,7 @@ tar() {
       exit 1
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
-      ln -sf "${BACKUP_NAME}-${ts}${preserve_suffix}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
+      ln -sf "${BACKUP_NAME}-${ts}${suffix}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
     fi
   }
   prune() {
