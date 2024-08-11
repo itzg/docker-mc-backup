@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -x
+WORKDIR="$(realpath "$(dirname "${0}")")"
+cd "${WORKDIR}/" || exit
+
 mkdir -p ./backups
 mkdir -p ./data
 
@@ -35,9 +39,13 @@ run_test1(){
   echo -e "\nTest 1: Ensure default behavior, no suffix"
   cleanup_backups
 
-  docker compose run --build backup now
+  docker compose -f docker-compose.yml config
+  
+  docker compose -f docker-compose.yml run --rm --build backup now
   preserved_backup_count=$(find backups/ -name "*.tgz" -name "*preserve*" | wc -l)
   not_preserved_backup_count=$(find backups/ -name "*.tgz" -not -name "*preserve*" | wc -l)
+  
+  tree backups
   
   echo "Preserved backups: ${preserved_backup_count}"
   echo "Not-Preserved backups: ${not_preserved_backup_count}"
@@ -60,7 +68,7 @@ run_test2(){
   touch -t "$old_timestamp" "./backups/fake-backup.tgz"
 
   # Plus current preserved backup
-  docker compose -f docker-compose.yml -f docker-compose.override.yml run --build backup now > /dev/null
+  docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm --build backup now > /dev/null
    
   preserved_backup_count=$(find backups/ -name "*.tgz" -name "*preserve*" | wc -l)
   not_preserved_backup_count=$(find backups/ -name "*.tgz" -not -name "*preserve*" | wc -l)

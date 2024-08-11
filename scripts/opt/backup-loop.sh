@@ -22,6 +22,7 @@ fi
 : "${BACKUP_ON_STARTUP:=true}"
 : "${PAUSE_IF_NO_PLAYERS:=false}"
 : "${PLAYERS_ONLINE_CHECK_INTERVAL:=5m}"
+: "${PRESERVE_MANUAL_BACKUPS:=false}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic, rsync
 : "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip zstd
 : "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
@@ -77,9 +78,10 @@ is_one_shot() {
   fi
 }
 
-preserve_suffix=""
-if is_one_shot; then
-    preserve_suffix="-preserve"
+if is_one_shot && [[ "${PRESERVE_MANUAL_BACKUPS^^}" = TRUE ]]; then
+  preserve_suffix="-preserve"
+else 
+  preserve_suffix=""
 fi
 
 is_paused() {

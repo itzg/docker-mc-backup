@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
+set -x
+WORKDIR="$(realpath "$(dirname "${0}")")"
+cd "${WORKDIR}/" || exit
+
 mkdir -p ./backups
 mkdir -p ./data
 
 get_backup_count() {
-  backup_count=$(ls -1 backups | wc -l)
+  backup_count=$(find backups/* -prune | wc -l)
   echo "Output: ${backup_count} backups"
 }
 
