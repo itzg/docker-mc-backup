@@ -17,6 +17,8 @@ jobs:
       EXCLUDES: '*.jar,exclude_dir'
       RCON_PATH: /usr/bin/rcon-cli
       DEBUG: true
+    permissions:
+      contents: write
     services:
       registry:
         image: registry:2
@@ -26,11 +28,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-# Script needs to be cleaned up a lot for shellcheck'ing
-#       - name: ShellCheck
-#         uses: ludeeus/action-shellcheck@1.1.0
-#         with:
-#           ignore: tests
+      # Script needs to be cleaned up a lot for shellcheck'ing
+      #       - name: ShellCheck
+      #         uses: ludeeus/action-shellcheck@1.1.0
+      #         with:
+      #           ignore: tests
 
       - name: Hadolint Action
         uses: hadolint/hadolint-action@v3.1.0

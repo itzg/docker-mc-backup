@@ -3,7 +3,7 @@ set -euo pipefail
 
 set -x
 
-WORKDIR="$(readlink -m "$(dirname "${0}")")"
+WORKDIR="$(realpath "$(dirname "${0}")")"
 
 cd "${WORKDIR}/.."
 
@@ -34,7 +34,8 @@ export RCON_PATH
 export PRUNE_BACKUPS_DAYS
 
 mkdir "${EXTRACT_DIR}"
-touch -d "$(( PRUNE_BACKUPS_DAYS + 2 )) days ago" "${LOCAL_DEST_DIR}/fake_backup_that_should_be_deleted.tgz"
+old_timestamp=$(TZ=UTC+96 date +%Y%m%d%H%M) # Two days old
+touch -t "$old_timestamp" "${LOCAL_DEST_DIR}/fake_backup_that_should_be_deleted.tgz"
 ls -al "${LOCAL_DEST_DIR}"
 
 timeout 50 docker run --rm \
