@@ -655,11 +655,13 @@ while true; do
   if [[ ${PAUSE_IF_NO_PLAYERS^^} = TRUE ]]; then
     while true; do
       if is_paused; then
+        log INFO "Server is paused, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
       elif ! PLAYERS_ONLINE=$(mc-monitor status --host "${SERVER_HOST}" --port "${SERVER_PORT}" --show-player-count 2>&1); then
         log ERROR "Error querying the server, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
       elif [ "${PLAYERS_ONLINE}" = 0 ]; then
+        log INFO "No players online, waiting ${PLAYERS_ONLINE_CHECK_INTERVAL}..."
         sleep "${PLAYERS_ONLINE_CHECK_INTERVAL}"
       else
         break
