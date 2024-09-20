@@ -369,6 +369,19 @@ restic() {
     # shellcheck disable=SC2086
     command restic forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
+
+  _unlock() {                                                                        
+  if ! [ -z "${output=$(command restic list locks 2>&1)}" ];then                     
+     log WARN "Confirmed stale lock on repo, unlocking..."                           
+     if [[ unlock=$(command restic unlock 2>&1) == *"success"* ]]; then              
+        log INFO "Successfully unlocked the repo"                                    
+     else                                                                            
+        log ERROR "Unable to unlock the repo. Is there another process running?"     
+        return 1                                                                          
+     fi                                                                                   
+  fi                                                                                      
+  }
+
   _check() {
       if ! output="$(command restic check 2>&1)"; then
         log ERROR "Repository contains error! Aborting"
@@ -376,6 +389,7 @@ restic() {
         return 1
       fi
   }
+
   init() {
     if [ -z "${RESTIC_PASSWORD:-}" ] \
         && [ -z "${RESTIC_PASSWORD_FILE:-}" ] \
@@ -389,6 +403,9 @@ restic() {
     fi
     if output="$(command restic snapshots 2>&1 >/dev/null)"; then
       log INFO "Repository already initialized"
+      log INFO "Checking for stale locks"
+      _unlock
+      log INFO "Checking repo integrity"
       _check
     elif <<<"${output}" grep -q '^Is there a repository at the following location?$'; then
       log INFO "Initializing new restic repository..."
@@ -397,6 +414,12 @@ restic() {
       <<<"${output}" log ERROR
       log ERROR "Wrong password provided to an existing repository?"
       return 1
+    elif <<<"${output}" grep -q 'repository is already locked exclusively'; then
+      <<<"${output}" log ERROR
+      log INFO "Detected stale lock, confirming..."                  
+      _unlock              
+      log INFO "Checking repo integrity"
+      _check  
     else
       <<<"${output}" log ERROR
       log INTERNALERROR "Unhandled restic repository state."
@@ -441,6 +464,7 @@ restic() {
   }
   call_if_function_exists "${@}"
 }
+
 
 rclone() {
   readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
