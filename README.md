@@ -18,6 +18,7 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `BACKUP_ON_STARTUP`=true : Set to false to skip first backup on startup.
 - `PAUSE_IF_NO_PLAYERS`=false
 - `PLAYERS_ONLINE_CHECK_INTERVAL`=5m
+- `PRESERVE_MANUAL_BACKUPS`=false : Adds a "-preserve" suffix to [on-demand backups](#on-demand-backups) which will be ignored by prune steps
 - `PRUNE_BACKUPS_DAYS`=7
 - `PRUNE_BACKUPS_COUNT`= -disabled unless set (only works with tar/rsync)
 - `PRUNE_RESTIC_RETENTION`=--keep-within 7d
