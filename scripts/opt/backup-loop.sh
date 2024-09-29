@@ -100,8 +100,15 @@ is_elem_in_array() {
 }
 
 log() {
+  # temporarily disable debug mode's setting of xtrace to avoid all the debug noise of logging
+  local oldState
+  # The  return  status  when listing options is zero if all optnames are enabled, non- zero otherwise.
+  oldState=$(shopt -po xtrace || true)
+  shopt -u -o xtrace
+
   if [ "$#" -lt 1 ]; then
     log INTERNALERROR "Wrong number of arguments passed to log function"
+    eval "$oldState"
     return 2
   fi
   local level="${1}"
@@ -114,6 +121,7 @@ log() {
   )
   if ! is_elem_in_array "${level}" "${valid_levels[@]}"; then
     log INTERNALERROR "Log level ${level} is not a valid level."
+    eval "$oldState"
     return 2
   fi
   (
@@ -129,6 +137,7 @@ log() {
       echo "Please report this: https://github.com/itzg/docker-mc-backup/issues"
     fi
   ) | awk -v level="${level}" '{ printf("%s %s %s\n", strftime("%FT%T%z"), level, $0); fflush(); }'
+  eval "$oldState"
 } >&2
 
 retry() {
@@ -225,11 +234,12 @@ load_rcon_password() {
 # prune() -> prune old backups. PRUNE_BACKUPS_DAYS is guaranteed to be positive.
 
 
+# shellcheck disable=SC2317
 tar() {
   readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
 
   _find_old_backups() {
-    find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
+    find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -mmin "+$prune_backups_minutes" "${@}"
   }
 
   _find_extra_backups() {
@@ -239,6 +249,14 @@ tar() {
 
   init() {
     mkdir -p "${DEST_DIR}"
+
+    # NOTES
+    # - can't use $(( )) since bash doesn't support floating point
+    # - mmin needs to be an integer operand and bc produces decimal values by default
+    #   - scale=0 to set zero decimal point values
+    #   - however, also need the /1 trick to truncate to an integer : https://stackoverflow.com/a/53532113/121324
+    prune_backups_minutes=$(echo "scale=0; (${PRUNE_BACKUPS_DAYS} * 1440)/1"|bc)
+
     case "${TAR_COMPRESS_METHOD}" in
         gzip)
         readonly tar_parameters=("--gzip")
