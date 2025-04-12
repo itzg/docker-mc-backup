@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+      - test/**
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
     paths-ignore:
       - "*.md"
 
@@ -56,7 +59,9 @@ jobs:
             type=ref,event=tag
             # latest repo tag gets a moving 'stable' image tag applied to the main variant
             type=raw,value=stable,enable=${{ github.ref_type == 'tag' }}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref_name == github.event.repository.default_branch }}
+            # allow for test branch image tags
+            type=ref,event=branch,enable=${{ github.ref_name != github.event.repository.default_branch }}
 
       - name: Build and push
         uses: docker/build-push-action@v6.15.0
