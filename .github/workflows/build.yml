@@ -56,8 +56,7 @@ jobs:
             type=ref,event=tag
             # latest repo tag gets a moving 'stable' image tag applied to the main variant
             type=raw,value=stable,enable=${{ github.ref_type == 'tag' }}
-          flavor: |
-            latest=true
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
         uses: docker/build-push-action@v6.15.0
