@@ -9,7 +9,7 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       SRC_DIR: /tmp/source
       DEST_DIR: /tmp/dest
