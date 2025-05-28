@@ -647,10 +647,15 @@ while true; do
         "$PRE_BACKUP_SCRIPT_FILE"
       fi
 
-      "${BACKUP_METHOD}" backup
+      backup_status=0
+      "${BACKUP_METHOD}" backup || backup_status=$?
+
+      if [[ $backup_status -ne 0 ]]; then
+        log WARN "Backup failed with exit code $backup_status"
+      fi
 
       if [[ $PRE_SAVE_ON_SCRIPT_FILE ]]; then
-        "$PRE_SAVE_ON_SCRIPT_FILE"
+        "$PRE_SAVE_ON_SCRIPT_FILE" $backup_status
       fi
 
       retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
@@ -659,7 +664,7 @@ while true; do
       trap EXIT
 
       if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
-        "$POST_BACKUP_SCRIPT_FILE"
+        "$POST_BACKUP_SCRIPT_FILE" $backup_status
       fi
 
     else
@@ -673,10 +678,15 @@ while true; do
       "$PRE_BACKUP_SCRIPT_FILE"
     fi
 
-    "${BACKUP_METHOD}" backup
+    backup_status=0
+    "${BACKUP_METHOD}" backup || backup_status=$?
+
+    if [[ $backup_status -ne 0 ]]; then
+      log WARN "Backup failed with exit code $backup_status"
+    fi
 
     if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
-      "$POST_BACKUP_SCRIPT_FILE"
+      "$POST_BACKUP_SCRIPT_FILE" $backup_status
     fi
   fi
 
