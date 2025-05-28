@@ -231,6 +231,7 @@ load_rcon_password() {
 # Should define following functions inside them
 # init() -> called before entering loop. Verify arguments, prepare for operations etc.
 # backup() -> create backup. It's guaranteed that all data is already flushed to disk.
+#   Passed a path to a log file that the backup tool's stdout and stderr should be written to.
 # prune() -> prune old backups. PRUNE_BACKUPS_DAYS is guaranteed to be positive.
 
 
@@ -280,21 +281,23 @@ tar() {
     esac
   }
   backup() {
+    if [[ ! $1 ]]; then
+      log INTERNALERROR "Backup log path not passed to tar.backup! Aborting"
+      exit 1
+    fi
+
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
-    if [ ${exitCode:-0} -eq 0 ]; then
-      true
-    elif [ ${exitCode:-0} -eq 1 ]; then
+    exitCode=0
+    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
+    if [[ $exitCode -eq 1 ]]; then
       log WARN "Dat files changed as we read it"
-    elif [ ${exitCode:-0} -gt 1 ]; then
-      log ERROR "tar exited with code ${exitCode}! Aborting"
-      exit 1
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
       ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
     fi
+    return $exitCode
   }
   prune() {
 
@@ -328,6 +331,11 @@ rsync() {
     mkdir -p "${DEST_DIR}"
   }
   backup() {
+    if [[ ! $1 ]]; then
+      log INTERNALERROR "Backup log path not passed to rsync.backup! Aborting"
+      exit 1
+    fi
+
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}"
     if [ -d "${DEST_DIR}/latest" ]; then
@@ -342,19 +350,18 @@ rsync() {
     fi
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     mkdir -p $outFile
-    command rsync -a "${link_dest[@]}" "${excludes[@]}" "${SRC_DIR}/" "${outFile}/"  || exitCode=$?
-    if [ ${exitCode:-0} -eq 0 ]; then
+    exitCode=0
+    command rsync -a "${link_dest[@]}" "${excludes[@]}" "${SRC_DIR}/" "${outFile}/" 2>&1 | tee "$1" || exitCode=$?
+    if [[ $exitCode -eq 0 ]]; then
       touch "${outFile}"
       true
-    elif [ ${exitCode:-0} -eq 1 ]; then
+    elif [[ $exitCode -eq 1 ]]; then
       log WARN "Dat files changed as we read it"
-    elif [ ${exitCode:-0} -gt 1 ]; then
-      log ERROR "rsync exited with code ${exitCode}! Aborting"
-      exit 1
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
       ln -sfT "${BACKUP_NAME}-${ts}" "${DEST_DIR}/latest"
     fi
+    return $exitCode
   }
   prune() {
 
@@ -461,6 +468,11 @@ restic() {
     readonly restic_tags_filter
   }
   backup() {
+    if [[ ! $1 ]]; then
+      log INTERNALERROR "Backup log path not passed to restic.backup! Aborting"
+      exit 1
+    fi
+
     log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
     args=(
       --host "${RESTIC_HOSTNAME}"
@@ -469,7 +481,7 @@ restic() {
       args+=(-vv)
     fi
     (cd "$SRC_DIR" &&
-          command restic backup "${args[@]}" "${restic_tags_arguments[@]}" "${excludes[@]}" "${includes_patterns[@]}" | log INFO
+          command restic backup "${args[@]}" "${restic_tags_arguments[@]}" "${excludes[@]}" "${includes_patterns[@]}" 2>&1 | tee "$1" | log INFO
     )
   }
   prune() {
@@ -519,6 +531,11 @@ rclone() {
     esac
   }
   backup() {
+    if [[ ! $1 ]]; then
+      log INTERNALERROR "Backup log path not passed to rsync.backup! Aborting"
+      exit 1
+    fi
+
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
@@ -532,10 +549,10 @@ rclone() {
       exit 1
     fi
 
-    if ! command rclone copy "${outFile}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}"; then
-      log ERROR "rclone copy operation failed -- will retry next time"
-    fi
+    exitCode=0
+    command rclone copy "${outFile}" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}" 2>&1 | tee "$1" || exitCode=$?
     rm "${outFile}"
+    return $exitCode
   }
   prune() {
     if [ -n "$(_find_old_backups)" ]; then
@@ -621,6 +638,8 @@ fi
 first_run=TRUE
 
 while true; do
+  backup_log="$(mktemp)"
+
   if [[ $first_run == TRUE && ${ONE_SHOT^^} = FALSE && ${BACKUP_ON_STARTUP^^} = FALSE ]]; then
     log INFO "Skipping backup on startup"
     first_run=false
@@ -648,14 +667,14 @@ while true; do
       fi
 
       backup_status=0
-      "${BACKUP_METHOD}" backup || backup_status=$?
+      "${BACKUP_METHOD}" backup "$backup_log" || backup_status=$?
 
       if [[ $backup_status -ne 0 ]]; then
-        log WARN "Backup failed with exit code $backup_status"
+        log ERROR "Backup failed with exit code $backup_status"
       fi
 
       if [[ $PRE_SAVE_ON_SCRIPT_FILE ]]; then
-        "$PRE_SAVE_ON_SCRIPT_FILE" $backup_status
+        "$PRE_SAVE_ON_SCRIPT_FILE" $backup_status "$backup_log"
       fi
 
       retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
@@ -664,7 +683,7 @@ while true; do
       trap EXIT
 
       if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
-        "$POST_BACKUP_SCRIPT_FILE" $backup_status
+        "$POST_BACKUP_SCRIPT_FILE" $backup_status "$backup_log"
       fi
 
     else
@@ -679,16 +698,18 @@ while true; do
     fi
 
     backup_status=0
-    "${BACKUP_METHOD}" backup || backup_status=$?
+    "${BACKUP_METHOD}" backup "$backup_log" || backup_status=$?
 
     if [[ $backup_status -ne 0 ]]; then
       log WARN "Backup failed with exit code $backup_status"
     fi
 
     if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
-      "$POST_BACKUP_SCRIPT_FILE" $backup_status
+      "$POST_BACKUP_SCRIPT_FILE" $backup_status "$backup_log"
     fi
   fi
+
+  rm "$backup_log"
 
   if (( PRUNE_BACKUPS_DAYS > 0 )); then
     "${BACKUP_METHOD}" prune
