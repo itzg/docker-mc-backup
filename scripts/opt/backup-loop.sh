@@ -316,6 +316,7 @@ tar() {
   call_if_function_exists "${@}"
 }
 
+# shellcheck disable=SC2317
 rsync() {
   _find_old_backups() {
     find "${DEST_DIR}" -maxdepth 1 -type d -mtime "+${PRUNE_BACKUPS_DAYS}" "${@}"
@@ -387,6 +388,7 @@ rsync() {
 }
 
 
+# shellcheck disable=SC2317
 restic() {
   readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-${SRC_DIR}}")
 
@@ -496,6 +498,7 @@ restic() {
 }
 
 
+# shellcheck disable=SC2317
 rclone() {
   readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
 
