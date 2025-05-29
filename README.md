@@ -187,6 +187,8 @@ Potential use-cases include sending notifications, or replicating a restic repos
 
 The backup waits for the server to respond to a rcon "save-on" command before running the scripts. After, the `PRE_SAVE_ALL_SCRIPT` is run, followed by rcon "save-off" and "save-all" commands. The, the `PRE_BACKUP_SCRIPT` is run, followed by the backup process. Then, the `PRE_SAVE_ON_SCRIPT` is run, followed by a rcon "save-on" command. Finally, the `POST_BACKUP_SCRIPT` is run.
 
+`PRE_SAVE_ON_SCRIPT` and `POST_BACKUP_SCRIPT` are both passed the exit code of the backup as the first argument, and the path to a log of the backup tool's output as the second argument. This may be used to take different actions depending on whether or not the backup failed.
+
 Alternatively `PRE_SAVE_ALL_SCRIPT_FILE` `PRE_BACKUP_SCRIPT_FILE`, `PRE_SAVE_ON_SCRIPT_FILE`, and `POST_BACKUP_SCRIPT_FILE` may be set to the path of a script that has been mounted into the container. The file must be executable.
 
 Note that `*_FILE` variables will be overridden by their non-FILE versions if both are set.
