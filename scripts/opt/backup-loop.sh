@@ -41,6 +41,7 @@ fi
 : "${RESTIC_ADDITIONAL_TAGS=mc_backups}" # Space separated list of restic tags
 : "${RESTIC_HOSTNAME:=$(hostname)}"
 : "${RESTIC_VERBOSE:=false}"
+: "${RESTIC_LIMIT_UPLOAD:=0}"
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
 : "${TZ:=Etc/UTC}"
@@ -478,6 +479,7 @@ restic() {
     log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
     args=(
       --host "${RESTIC_HOSTNAME}"
+      --limit-upload "${RESTIC_LIMIT_UPLOAD}"
     )
     if isDebug || isTrue "$RESTIC_VERBOSE"; then
       args+=(-vv)
