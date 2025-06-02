@@ -90,6 +90,8 @@ Use the `RESTIC_ADDITIONAL_TAGS` variable to define a space separated list of ad
 
 By default, the hostname, typically the container/pod's name, will be used as the Restic backup's hostname. That can be overridden by setting `RESTIC_HOSTNAME` 
 
+If you want to limit the restic backup upload speed, you can set the `RESTIC_LIMIT_UPLOAD` variable to a value in KiB/s. For example, `RESTIC_LIMIT_UPLOAD=1024` will limit the upload speed to approximately 1 MiB/s. By default, there is no limit.
+
 You can fine tune the retention cycle of the restic backups using the `PRUNE_RESTIC_RETENTION` variable. Take a look at the [restic documentation](https://restic.readthedocs.io/en/latest/060_forget.html) for details.
 
 > **_EXAMPLE_**  
