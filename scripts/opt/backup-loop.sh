@@ -245,8 +245,9 @@ tar() {
   }
 
   _find_extra_backups() {
-  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -exec ls -NtA {} \+ | \
-    tail -n +$((PRUNE_BACKUPS_COUNT + 1))
+  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -exec ls -1Nt {} \+ | \
+    tail -n +$((PRUNE_BACKUPS_COUNT + 1)) | \
+    tr '\n' '\0'
   }
 
   init() {
@@ -311,7 +312,7 @@ tar() {
 
     if [ -n "${PRUNE_BACKUPS_COUNT}" ] && [ "${PRUNE_BACKUPS_COUNT}" -gt 0 ]; then
       log INFO "Pruning backup files to keep only the latest ${PRUNE_BACKUPS_COUNT} backups"
-      _find_extra_backups | xargs -r -n 1 rm -v | log INFO
+      _find_extra_backups | xargs -r -0 -n 1 rm -v | log INFO
     fi
   }
   call_if_function_exists "${@}"
