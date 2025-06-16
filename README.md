@@ -29,7 +29,9 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `RCON_RETRY_INTERVAL`=10s
 - `SERVER_HOST`=`RCON_HOST` : Can be set if the game and RCON are accessible on different addresses.
 - `SERVER_PORT`=25565
-- `INCLUDES`=. : comma separated list of include patterns relative to directory specified by `SRC_DIR` where `.` specifies all of that directory should be included in the backup. 
+- `INCLUDES`=. : comma separated list of include patterns relative to directory specified by `SRC_DIR` where `.` specifies all of that directory should be included in the backup.
+- `ENABLE_SAVE_ALL`=true : Set to `false` to skip the `save-all` Minecraft server command before backup. This is useful if you experience issues with the server hanging on `save-all` command, **AND** it is ensured that the server regularly saves the world data to disk (i.e., autosave is enabled).
+- `ENABLE_SYNC`=true : Set to `false` to skip the `sync` Linux command that flushes the file system buffers to disk after the `save-all` Minecraft server command. Only disable this if you are experiencing issues (e.g., in cluster environments) and know what you are doing (see [issue #189](https://github.com/itzg/docker-mc-backup/issues/189)).
 
   **For Restic** the default is the value of `SRC_DIR` to remain backward compatible with previous images.
 - `EXCLUDES`=\*.jar,cache,logs,\*.tmp : commas separated list of file patterns to exclude from the backup. To disable exclusions, set to an empty string.

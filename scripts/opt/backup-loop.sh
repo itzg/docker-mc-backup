@@ -35,6 +35,8 @@ fi
 
 : "${RCON_RETRIES:=5}"
 : "${RCON_RETRY_INTERVAL:=10s}"
+: "${ENABLE_SAVE_ALL:=true}"
+: "${ENABLE_SYNC:=true}"
 : "${EXCLUDES=*.jar,cache,logs,*.tmp}" # Comma separated list of glob(3) patterns
 : "${EXCLUDES_FILE:=}" # Path to file containing list of glob(3) patterns
 : "${LINK_LATEST:=false}"
@@ -665,8 +667,13 @@ while true; do
       # or gets shut down, we want to make sure saving is on
       trap 'retry 5 5s rcon-cli save-on' EXIT
 
-      retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
-      retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
+      if isTrue "$ENABLE_SAVE_ALL"; then
+        retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
+
+        if isTrue "$ENABLE_SYNC"; then
+          retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
+        fi
+      fi
 
       if [[ $PRE_BACKUP_SCRIPT_FILE ]]; then
         "$PRE_BACKUP_SCRIPT_FILE"
