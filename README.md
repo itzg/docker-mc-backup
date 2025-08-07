@@ -94,6 +94,8 @@ By default, the hostname, typically the container/pod's name, will be used as th
 
 If you want to limit the restic backup upload speed, you can set the `RESTIC_LIMIT_UPLOAD` variable to a value in KiB/s. For example, `RESTIC_LIMIT_UPLOAD=1024` will limit the upload speed to approximately 1 MiB/s. By default, there is no limit.
 
+When sharing a restic repository between multiple containers, set RESTIC_RETRY_LOCK (e.g., 5m) to define the maximum time restic will retry acquiring the repository lock before giving up. 
+
 You can fine tune the retention cycle of the restic backups using the `PRUNE_RESTIC_RETENTION` variable. Take a look at the [restic documentation](https://restic.readthedocs.io/en/latest/060_forget.html) for details.
 
 > **_EXAMPLE_**  

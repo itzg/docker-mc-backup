@@ -44,6 +44,7 @@ fi
 : "${RESTIC_HOSTNAME:=$(hostname)}"
 : "${RESTIC_VERBOSE:=false}"
 : "${RESTIC_LIMIT_UPLOAD:=0}"
+: "${RESTIC_RETRY_LOCK:=1m}" # Max time restic will retry to acquire a repository lock before failing
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
 : "${TZ:=Etc/UTC}"
@@ -398,7 +399,7 @@ restic() {
 
   _delete_old_backups() {
     # shellcheck disable=SC2086
-    command restic forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
+    command restic --retry-lock "${RESTIC_RETRY_LOCK}" forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
 
   _unlock() {                                                                        
@@ -414,7 +415,7 @@ restic() {
   }
 
   _check() {
-      if ! output="$(command restic check 2>&1)"; then
+      if ! output="$(command restic --retry-lock "${RESTIC_RETRY_LOCK}" check 2>&1)"; then
         log ERROR "Repository contains error! Aborting"
         <<<"${output}" log ERROR
         return 1
@@ -481,6 +482,7 @@ restic() {
 
     log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
     args=(
+      --retry-lock "${RESTIC_RETRY_LOCK}"
       --host "${RESTIC_HOSTNAME}"
       --limit-upload "${RESTIC_LIMIT_UPLOAD}"
     )
