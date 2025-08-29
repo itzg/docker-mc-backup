@@ -18,6 +18,7 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `BACKUP_ON_STARTUP`=true : Set to false to skip first backup on startup.
 - `PAUSE_IF_NO_PLAYERS`=false
 - `PLAYERS_ONLINE_CHECK_INTERVAL`=5m
+- `CRON_SCHEDULE`: disabled unless set, [see below](#cron-scheduling) how to enable
 - `PRUNE_BACKUPS_DAYS`=7
 - `PRUNE_BACKUPS_COUNT`= -disabled unless set (only works with tar/rsync)
 - `PRUNE_RESTIC_RETENTION`=--keep-within 7d
@@ -58,6 +59,31 @@ The `PAUSE_IF_NO_PLAYERS` option lets you pause backups if no players are online
 If `PAUSE_IF_NO_PLAYERS`="true" and there are no players online after a backup is made, then instead of immediately scheduling the next backup, the script will start checking the server's player count every `PLAYERS_ONLINE_CHECK_INTERVAL` (defaults to 5 minutes). Once a player joins the server, the next backup will be scheduled in `BACKUP_INTERVAL`.
 
 `EXCLUDES` is a comma-separated list of glob(3) patterns to exclude from backups. By default excludes all jar files (plugins, server files), logs folder and cache (used by i.e. PaperMC server).
+
+### Cron scheduling
+
+Enable clock based scheduling with Cron by setting `CRON_SCHEDULE` to a value in the format of a [cron expression](https://en.wikipedia.org/wiki/Cron#Cron_expression).
+
+#### Examples
+- `CRON_SCHEDULE`="0 4 * * *" -> backup every day at 4 am
+- `CRON_SCHEDULE`="0 * * * *" -> backup every hour
+- `CRON_SCHEDULE`="0 0 1 * *" -> backup at the 1st day of every month
+
+The time is in UTC timezone by default, but if you want to use your servers local time, you can pass it to the container as seen in the `volumes` section below:
+
+```yaml
+backup:
+  image: itzg/mc-backup
+  restart: unless-stopped
+  environment:
+    CRON_SCHEDULE: "0 4 * * *"
+  volumes:
+    /etc/localtime:/etc/localtime:ro
+    /etc/timezone:/etc/timezone:ro
+```
+
+> **Note**  
+> Setting `CRON_SCHEDULE` overrides other interval based backup triggering and thus these parameters have no effect while it's set: `INITIAL_DELAY`, `BACKUP INTERVAL`, `BACKUP_ON_STARTUP`, `PAUSE_IF_NO_PLAYERS` and `PLAYERS_ONLINE_CHECK_INTERVAL`
 
 ### Backup methods
 

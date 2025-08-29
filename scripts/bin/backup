@@ -26,6 +26,12 @@ file_env "AWS_SECRET_ACCESS_KEY"
 
 args=(/opt/entrypoint-demoter --match /backups)
 
+# if a cron schedule is set, configure and run crond in foreground
+if [[ -v CRON_SCHEDULE ]]; then
+  "${args[@]}" echo "$CRON_SCHEDULE export ONE_SHOT=true; /opt/backup-loop.sh" | crontab -
+  exec crond -f -L /dev/stdout
+fi
+
 case "$1" in
   now)
     ONE_SHOT=true exec "${args[@]}" /opt/backup-loop.sh ;;
