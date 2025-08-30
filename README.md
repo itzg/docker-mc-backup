@@ -19,6 +19,7 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `PAUSE_IF_NO_PLAYERS`=false
 - `PLAYERS_ONLINE_CHECK_INTERVAL`=5m
 - `CRON_SCHEDULE`: disabled unless set, [see below](#cron-scheduling) how to enable
+- `BACKUP_UID`: Can be set to user id to run cron schedule as non-root.
 - `PRUNE_BACKUPS_DAYS`=7
 - `PRUNE_BACKUPS_COUNT`= -disabled unless set (only works with tar/rsync)
 - `PRUNE_RESTIC_RETENTION`=--keep-within 7d
@@ -62,6 +63,9 @@ If `PAUSE_IF_NO_PLAYERS`="true" and there are no players online after a backup i
 
 ### Cron scheduling
 
+> [!WARNING]
+> The container must be run with root user to launch `crond`. While you can use `BACKUP_UID` parameter to use non-root user, this is still less secure than running the container as non-root user.
+
 Enable clock based scheduling with Cron by setting `CRON_SCHEDULE` to a value in the format of a [cron expression](https://en.wikipedia.org/wiki/Cron#Cron_expression).
 
 #### Examples
@@ -77,12 +81,15 @@ backup:
   restart: unless-stopped
   environment:
     CRON_SCHEDULE: "0 4 * * *"
+    BACKUP_UID: "1000"
   volumes:
     /etc/localtime:/etc/localtime:ro
     /etc/timezone:/etc/timezone:ro
 ```
 
-> **Note**  
+To run the backups as a non-root user, set `BACKUP_UID` to a user id and the backup processes will be spawned with that user. Service attribute `user` is incompatible with cron scheduling.
+
+> [!NOTE]
 > Setting `CRON_SCHEDULE` overrides other interval based backup triggering and thus these parameters have no effect while it's set: `INITIAL_DELAY`, `BACKUP INTERVAL`, `BACKUP_ON_STARTUP`, `PAUSE_IF_NO_PLAYERS` and `PLAYERS_ONLINE_CHECK_INTERVAL`
 
 ### Backup methods

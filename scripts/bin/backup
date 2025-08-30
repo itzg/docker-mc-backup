@@ -28,7 +28,21 @@ args=(/opt/entrypoint-demoter --match /backups)
 
 # if a cron schedule is set, configure and run crond in foreground
 if [[ -v CRON_SCHEDULE ]]; then
-  "${args[@]}" echo "$CRON_SCHEDULE export ONE_SHOT=true; /opt/backup-loop.sh" | crontab -
+  if [[ ! $EUID -eq 0 ]]; then
+    echo "Cron scheduling requires root user, use BACKUP_UID to run backup as non-root user"
+    exit 1
+  fi
+
+  if [[ -v BACKUP_UID ]]; then
+    # add 'backup' user if not already added
+    id -u backup &>/dev/null || adduser -DHu $BACKUP_UID backup
+    # non-root user cron job
+    echo "$CRON_SCHEDULE export ONE_SHOT=true; /opt/backup-loop.sh" | crontab -u backup -
+  else
+    # root cron job, but still uses entrypoint-demoter
+    echo "$CRON_SCHEDULE export ONE_SHOT=true; ${args[@]} /opt/backup-loop.sh" | crontab -
+  fi
+
   exec crond -f -L /dev/stdout
 fi
 
