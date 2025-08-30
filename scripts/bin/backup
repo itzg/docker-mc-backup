@@ -27,7 +27,7 @@ file_env "AWS_SECRET_ACCESS_KEY"
 args=(/opt/entrypoint-demoter --match /backups)
 
 # if a cron schedule is set, configure and run crond in foreground
-if [[ -v CRON_SCHEDULE ]]; then
+if [[ -v CRON_SCHEDULE && "$1" == "loop" ]]; then
   if [[ ! $EUID -eq 0 ]]; then
     echo "Cron scheduling requires root user, use BACKUP_UID to run backup as non-root user"
     exit 1
