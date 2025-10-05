@@ -726,7 +726,7 @@ while true; do
 
   rm "$backup_log"
 
-  if (( PRUNE_BACKUPS_DAYS > 0 )); then
+  if (( PRUNE_BACKUPS_DAYS > 0 )) || [[ -n "$PRUNE_BACKUPS_COUNT" ]]; then
     "${BACKUP_METHOD}" prune
   fi
 
