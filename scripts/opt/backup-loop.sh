@@ -254,6 +254,8 @@ tar() {
   }
 
   init() {
+    : "${SKIP_LOCKING:=false}"
+
     mkdir -p "${DEST_DIR}"
 
     # NOTES
@@ -334,6 +336,8 @@ rsync() {
   }
 
   init() {
+    : "${SKIP_LOCKING:=false}"
+
     mkdir -p "${DEST_DIR}"
   }
   backup() {
@@ -423,6 +427,8 @@ restic() {
   }
 
   init() {
+    : "${SKIP_LOCKING:=true}"
+
     if [ -z "${RESTIC_PASSWORD:-}" ] \
         && [ -z "${RESTIC_PASSWORD_FILE:-}" ] \
         && [ -z "${RESTIC_PASSWORD_COMMAND:-}" ]; then
@@ -516,6 +522,8 @@ rclone() {
             'BEGIN { FS=";" } $1 < PRUNE_DATE { printf "%s/%s\n", DESTINATION, $2 }'
   }
   init() {
+    : "${SKIP_LOCKING:=false}"
+
     # Check if rclone is installed and configured correctly
     mkdir -p "${DEST_DIR}"
     case "${RCLONE_COMPRESS_METHOD}" in
@@ -573,6 +581,53 @@ rclone() {
     fi
   }
   call_if_function_exists "${@}"
+}
+
+do_backup() {
+  if [[ $PRE_SAVE_ALL_SCRIPT_FILE ]]; then
+    "$PRE_SAVE_ALL_SCRIPT_FILE"
+  fi
+
+  if retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-off; then
+    # No matter what we were doing, from now on if the script crashes
+    # or gets shut down, we want to make sure saving is on
+    trap 'retry 5 5s rcon-cli save-on' EXIT
+
+    if isTrue "$ENABLE_SAVE_ALL"; then
+      retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
+
+      if isTrue "$ENABLE_SYNC"; then
+        retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
+      fi
+    fi
+
+    if [[ $PRE_BACKUP_SCRIPT_FILE ]]; then
+      "$PRE_BACKUP_SCRIPT_FILE"
+    fi
+
+    backup_status=0
+    "${BACKUP_METHOD}" backup "$backup_log" || backup_status=$?
+
+    if [[ $backup_status -ne 0 ]]; then
+      log ERROR "Backup failed with exit code $backup_status"
+    fi
+
+    if [[ $PRE_SAVE_ON_SCRIPT_FILE ]]; then
+      "$PRE_SAVE_ON_SCRIPT_FILE" $backup_status "$backup_log"
+    fi
+
+    retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
+
+    # Remove our exit trap now
+    trap EXIT
+
+    if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
+      "$POST_BACKUP_SCRIPT_FILE" $backup_status "$backup_log"
+    fi
+  else
+    log ERROR "Unable to turn saving off. Is the server running?"
+    exit 1
+  fi
 }
 
 ##########
@@ -646,9 +701,13 @@ if ! is_one_shot; then
 fi
 
 first_run=TRUE
+backup_log="$(mktemp)"
+
+##########
+## loop ##
+##########
 
 while true; do
-  backup_log="$(mktemp)"
 
   if [[ $first_run == TRUE && ${ONE_SHOT^^} = FALSE && ${BACKUP_ON_STARTUP^^} = FALSE ]]; then
     log INFO "Skipping backup on startup"
@@ -660,50 +719,18 @@ while true; do
     log INFO "waiting for rcon readiness..."
     retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
 
-    if [[ $PRE_SAVE_ALL_SCRIPT_FILE ]]; then
-      "$PRE_SAVE_ALL_SCRIPT_FILE"
-    fi
-
-    if retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-off; then
-      # No matter what we were doing, from now on if the script crashes
-      # or gets shut down, we want to make sure saving is on
-      trap 'retry 5 5s rcon-cli save-on' EXIT
-
-      if isTrue "$ENABLE_SAVE_ALL"; then
-        retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-all flush
-
-        if isTrue "$ENABLE_SYNC"; then
-          retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} sync
-        fi
-      fi
-
-      if [[ $PRE_BACKUP_SCRIPT_FILE ]]; then
-        "$PRE_BACKUP_SCRIPT_FILE"
-      fi
-
-      backup_status=0
-      "${BACKUP_METHOD}" backup "$backup_log" || backup_status=$?
-
-      if [[ $backup_status -ne 0 ]]; then
-        log ERROR "Backup failed with exit code $backup_status"
-      fi
-
-      if [[ $PRE_SAVE_ON_SCRIPT_FILE ]]; then
-        "$PRE_SAVE_ON_SCRIPT_FILE" $backup_status "$backup_log"
-      fi
-
-      retry ${RCON_RETRIES} ${RCON_RETRY_INTERVAL} rcon-cli save-on
-
-      # Remove our exit trap now
-      trap EXIT
-
-      if [[ $POST_BACKUP_SCRIPT_FILE ]]; then
-        "$POST_BACKUP_SCRIPT_FILE" $backup_status "$backup_log"
-      fi
-
+    if isTrue "${SKIP_LOCKING}" || ! [[ -w "$DEST_DIR" ]]; then
+      do_backup
     else
-      log ERROR "Unable to turn saving off. Is the server running?"
-      exit 1
+
+      lockfile="$DEST_DIR/.mc-backup-lock"
+      # open lock file
+      exec 4<>"$lockfile"
+      flock 4
+      do_backup
+      # close lock file, which also releases lock
+      exec 4<&-
+
     fi
   else # paused
     log INFO "Server is paused, proceeding with backup"

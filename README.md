@@ -34,14 +34,11 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 - `INCLUDES`=. : comma separated list of include patterns relative to directory specified by `SRC_DIR` where `.` specifies all of that directory should be included in the backup.
 - `ENABLE_SAVE_ALL`=true : Set to `false` to skip the `save-all` Minecraft server command before backup. This is useful if you experience issues with the server hanging on `save-all` command, **AND** it is ensured that the server regularly saves the world data to disk (i.e., autosave is enabled).
 - `ENABLE_SYNC`=true : Set to `false` to skip the `sync` Linux command that flushes the file system buffers to disk after the `save-all` Minecraft server command. Only disable this if you are experiencing issues (e.g., in cluster environments) and know what you are doing (see [issue #189](https://github.com/itzg/docker-mc-backup/issues/189)).
-
-  **For Restic** the default is the value of `SRC_DIR` to remain backward compatible with previous images.
 - `EXCLUDES`=\*.jar,cache,logs,\*.tmp : commas separated list of file patterns to exclude from the backup. To disable exclusions, set to an empty string.
 - `EXCLUDES_FILE`: Can be set to read the list of excludes (one per line) from a file. Can be used with `EXCLUDES` to add more excludes.
-- `RESTIC_ADDITIONAL_TAGS`=mc_backups : additional tags to apply to the backup. Set to an empty string to disable additional tags.
-- `RESTIC_VERBOSE`=false : set to "true" to enable verbose output during restic backup operation
 - `TZ` : Can be set to the timezone to use for logging
 - `PRE_SAVE_ALL_SCRIPT`, `PRE_BACKUP_SCRIPT`, `PRE_SAVE_ON_SCRIPT`, `POST_BACKUP_SCRIPT`, `*_SCRIPT_FILE`: See [Backup scripts](#backup-scripts)
+- `SKIP_LOCKING` (true for restic, false for others): skips locking the `$DEST_DIR`, which prevents concurrent backup operations, such as scheduled and "now" executions
 
 If `PRUNE_BACKUPS_DAYS` is set to a positive number, it'll delete old `.tgz` backup files from `DEST_DIR`. By default deletes backups older than a week.
 
@@ -117,6 +114,9 @@ Set `BACKUP_METHOD` to one of the following, where the default is `tar`.
 `LINK_LATEST` is a true/false flag that creates a symbolic link to the latest backup.
 
 #### `restic`
+
+- `RESTIC_ADDITIONAL_TAGS`=mc_backups : additional tags to apply to the backup. Set to an empty string to disable additional tags.
+- `RESTIC_VERBOSE`=false : set to "true" to enable verbose output during restic backup operation
 
 See [restic documentation](https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html) on what variables are needed to be defined.
 At least one of `RESTIC_PASSWORD*` variables need to be defined, along with `RESTIC_REPOSITORY`.
