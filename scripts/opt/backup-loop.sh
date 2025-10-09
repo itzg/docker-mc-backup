@@ -403,7 +403,7 @@ restic() {
 
   _delete_old_backups() {
     # shellcheck disable=SC2086
-    command restic --retry-lock "${RESTIC_RETRY_LOCK}" forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
+    command restic --retry-lock "${RESTIC_RETRY_LOCK}" forget --host "${RESTIC_HOSTNAME}" --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
 
   _unlock() {                                                                        
