@@ -351,7 +351,7 @@ rsync() {
     if [ -d "${DEST_DIR}/latest" ]; then
       log INFO "Latest found so using it for link"
       link_dest=("--link-dest" "${DEST_DIR}/latest")
-    elif [ $(ls "${DEST_DIR}" | wc -l ) -lt 1 ]; then  
+    elif [ $(ls "${DEST_DIR}" | wc -l ) -lt 1 ]; then
       log INFO "No previous backups. Running full"
       link_dest=()
     else
@@ -403,19 +403,19 @@ restic() {
 
   _delete_old_backups() {
     # shellcheck disable=SC2086
-    command restic --retry-lock "${RESTIC_RETRY_LOCK}" forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
+    command restic --retry-lock "${RESTIC_RETRY_LOCK}" forget --host "${RESTIC_HOSTNAME}" --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
 
-  _unlock() {                                                                        
-  if ! [ -z "${output=$(command restic list locks 2>&1)}" ];then                     
-     log WARN "Confirmed stale lock on repo, unlocking..."                           
-     if [[ unlock=$(command restic unlock 2>&1) == *"success"* ]]; then              
-        log INFO "Successfully unlocked the repo"                                    
-     else                                                                            
-        log ERROR "Unable to unlock the repo. Is there another process running?"     
-        return 1                                                                          
-     fi                                                                                   
-  fi                                                                                      
+  _unlock() {
+  if ! [ -z "${output=$(command restic list locks 2>&1)}" ];then
+     log WARN "Confirmed stale lock on repo, unlocking..."
+     if [[ unlock=$(command restic unlock 2>&1) == *"success"* ]]; then
+        log INFO "Successfully unlocked the repo"
+     else
+        log ERROR "Unable to unlock the repo. Is there another process running?"
+        return 1
+     fi
+  fi
   }
 
   _check() {
@@ -439,7 +439,7 @@ restic() {
       log ERROR "RESTIC_REPOSITORY is not set!"
       return 1
     fi
-    if output="$(command restic snapshots 2>&1 >/dev/null)"; then
+    if output="$(command restic cat config 2>&1 >/dev/null)"; then
       log INFO "Repository already initialized"
       log INFO "Checking for stale locks"
       _unlock
@@ -454,10 +454,10 @@ restic() {
       return 1
     elif <<<"${output}" grep -q 'repository is already locked exclusively'; then
       <<<"${output}" log ERROR
-      log INFO "Detected stale lock, confirming..."                  
-      _unlock              
+      log INFO "Detected stale lock, confirming..."
+      _unlock
       log INFO "Checking repo integrity"
-      _check  
+      _check
     else
       <<<"${output}" log ERROR
       log INTERNALERROR "Unhandled restic repository state."
