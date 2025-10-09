@@ -439,7 +439,7 @@ restic() {
       log ERROR "RESTIC_REPOSITORY is not set!"
       return 1
     fi
-    if output="$(command restic snapshots 2>&1 >/dev/null)"; then
+    if output="$(command restic cat config 2>&1 >/dev/null)"; then
       log INFO "Repository already initialized"
       log INFO "Checking for stale locks"
       _unlock
