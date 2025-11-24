@@ -24,7 +24,7 @@ jobs:
           - 5000:5000
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
 # Script needs to be cleaned up a lot for shellcheck'ing
 #       - name: ShellCheck
