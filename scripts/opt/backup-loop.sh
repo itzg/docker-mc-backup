@@ -440,8 +440,13 @@ restic() {
       return 1
     fi
 
+    # Duplicate stdout to a first unused file descriptor (fd) 5 which will be used later
     exec 5>&1
-    if output="$(command restic cat config 2>&1 >/dev/null | stdbuf -oL awk '{print "restic cat config: " $0}' | tee >(cat - >&5))"; then
+
+    # Run restic, prefix each line and redirect output to fd 5 in a subshell (so it can be shown in realtime).
+    # And finally capture the whole output for later processing
+    # printf("%s %s %s\n", strftime("%FT%T%z"), level, $0);
+    if output="$(command restic cat config 2>&1 >/dev/null | stdbuf -oL awk '{printf("%s restic cat config: %s\n", strftime("%FT%T%z"), $0);}' | tee >(cat - >&5))"; then
       log INFO "Repository already initialized"
       log INFO "Checking for stale locks"
       _unlock
