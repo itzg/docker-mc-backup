@@ -452,7 +452,11 @@ restic() {
       _unlock
       log INFO "Checking repo integrity"
       _check
-    elif <<<"${output}" grep -q '^Is there a repository at the following location?$'; then
+    elif <<<"${output}" grep -q 'Fatal: unable to open config file: Stat: 400 Bad Request$'; then
+      <<<"${output}" log ERROR
+      log ERROR "Unable to open config file. Please check restic configuration"
+      return 1
+    elif <<<"${output}" grep -q 'Is there a repository at the following location?$'; then
       log INFO "Initializing new restic repository..."
       command restic init | log INFO
     elif <<<"${output}" grep -q 'wrong password'; then
