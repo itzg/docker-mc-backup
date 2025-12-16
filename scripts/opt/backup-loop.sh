@@ -439,13 +439,24 @@ restic() {
       log ERROR "RESTIC_REPOSITORY is not set!"
       return 1
     fi
-    if output="$(command restic cat config 2>&1 >/dev/null)"; then
+
+    # Duplicate stdout to a first unused file descriptor (fd) 5 which will be used later
+    exec 5>&1
+
+    # Run restic, prefix each line and redirect output to fd 5 in a subshell (so it can be shown in realtime).
+    # And finally capture the whole output for later processing
+    # printf("%s %s %s\n", strftime("%FT%T%z"), level, $0);
+    if output="$(command restic cat config 2>&1 >/dev/null | stdbuf -oL awk '{printf("%s restic cat config: %s\n", strftime("%FT%T%z"), $0);}' | tee >(cat - >&5))"; then
       log INFO "Repository already initialized"
       log INFO "Checking for stale locks"
       _unlock
       log INFO "Checking repo integrity"
       _check
-    elif <<<"${output}" grep -q '^Is there a repository at the following location?$'; then
+    elif <<<"${output}" grep -q 'Fatal: unable to open config file: Stat: 400 Bad Request$'; then
+      <<<"${output}" log ERROR
+      log ERROR "Unable to open config file. Please check restic configuration"
+      return 1
+    elif <<<"${output}" grep -q 'Is there a repository at the following location?$'; then
       log INFO "Initializing new restic repository..."
       command restic init | log INFO
     elif <<<"${output}" grep -q 'wrong password'; then
