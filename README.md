@@ -224,7 +224,7 @@ docker run --rm ...data and backup -v args... itzg/mc-backup backup now
 The `PRE_SAVE_ALL_SCRIPT`, `PRE_BACKUP_SCRIPT`, `PRE_SAVE_ON_SCRIPT`, and `POST_BACKUP_SCRIPT`, variables may be set to a bash script to run before and after the backup process.
 Potential use-cases include sending notifications, or replicating a restic repository to a remote store.
 
-The backup waits for the server to respond to a rcon "save-on" command before running the scripts. After, the `PRE_SAVE_ALL_SCRIPT` is run, followed by rcon "save-off" and "save-all" commands. The, the `PRE_BACKUP_SCRIPT` is run, followed by the backup process. Then, the `PRE_SAVE_ON_SCRIPT` is run, followed by a rcon "save-on" command. Finally, the `POST_BACKUP_SCRIPT` is run.
+The backup waits for the server to respond to a rcon "save-on" command before running the scripts. After, the `PRE_SAVE_ALL_SCRIPT` is run, followed by rcon "save-off" and "save-all" commands. Then, the `PRE_BACKUP_SCRIPT` is run, followed by the backup process. Then, the `PRE_SAVE_ON_SCRIPT` is run, followed by a rcon "save-on" command. Finally, the `POST_BACKUP_SCRIPT` is run.
 
 `PRE_SAVE_ON_SCRIPT` and `POST_BACKUP_SCRIPT` are both passed the exit code of the backup as the first argument, and the path to a log of the backup tool's output as the second argument. This may be used to take different actions depending on whether or not the backup failed.
 
