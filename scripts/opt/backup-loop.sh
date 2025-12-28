@@ -592,8 +592,8 @@ rclone() {
         ;;
 
         xz)
-        tar_parameters=("zstd")
-        readonly backup_extension="tar.zst"
+        tar_parameters=("xz")
+        readonly backup_extension="tar.xz"
         ;;
 
         compress)
