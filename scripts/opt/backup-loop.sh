@@ -24,7 +24,7 @@ fi
 : "${PLAYERS_ONLINE_CHECK_INTERVAL:=5m}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic, rsync
 : "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip lzip lzma lzop xz compress zstd
-: "${TAR_PARAMETERS:=-3 --long=25 --single-thread}"
+: "${TAR_PARAMETERS:=}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
 : "${PRUNE_BACKUPS_COUNT:=}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
@@ -292,8 +292,8 @@ tar() {
         ;;
 
         xz)
-        tar_parameters=("zstd")
-        readonly backup_extension="tar.zst"
+        tar_parameters=("xz")
+        readonly backup_extension="tar.xz"
         ;;
 
         compress)
