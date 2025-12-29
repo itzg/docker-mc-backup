@@ -23,7 +23,7 @@ fi
 : "${PAUSE_IF_NO_PLAYERS:=false}"
 : "${PLAYERS_ONLINE_CHECK_INTERVAL:=5m}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic, rsync
-: "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip lzip lzma lzop xz compress zstd
+: "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip lzip lzma lzop xz zstd
 : "${TAR_COMPRESS_PARAMETERS:=}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
 : "${PRUNE_BACKUPS_COUNT:=}"
