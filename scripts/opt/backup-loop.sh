@@ -267,37 +267,37 @@ tar() {
 
     case "${TAR_COMPRESS_METHOD}" in
         bzip2)
-        tar_parameters=("bzip2")
+        tar_compress_parameters=("bzip2")
         readonly backup_extension="tar.bz2"
         ;;
 
         gzip)
-        tar_parameters=("gzip")
+        tar_compress_parameters=("gzip")
         readonly backup_extension="tar.gz"
         ;;
 
         lzip)
-        tar_parameters=("lzip")
+        tar_compress_parameters=("lzip")
         readonly backup_extension="tar.lz"
         ;;
 
         lzma)
-        tar_parameters=("lzma")
+        tar_compress_parameters=("lzma")
         readonly backup_extension="tar.lzma"
         ;;
 
         lzop)
-        tar_parameters=("lzop")
+        tar_compress_parameters=("lzop")
         readonly backup_extension="tar.lzo"
         ;;
 
         xz)
-        tar_parameters=("xz")
+        tar_compress_parameters=("xz")
         readonly backup_extension="tar.xz"
         ;;
 
         zstd)
-        tar_parameters=("zstd")
+        tar_compress_parameters=("zstd")
         readonly backup_extension="tar.zst"
         ;;
 
@@ -307,8 +307,8 @@ tar() {
         ;;
     esac
 
-    tar_parameters+=("${TAR_COMPRESS_PARAMETERS[@]}")
-    readonly tar_parameters
+    tar_compress_parameters+=("${TAR_COMPRESS_PARAMETERS[@]}")
+    readonly tar_compress_parameters
   }
   backup() {
     if [[ ! $1 ]]; then
@@ -320,7 +320,7 @@ tar() {
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     exitCode=0
-    command tar "${excludes[@]}" --use-compress-program "${tar_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
+    command tar "${excludes[@]}" --use-compress-program "${tar_compress_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
     if [[ $exitCode -eq 1 ]]; then
       log WARN "Dat files changed as we read it"
     fi
@@ -562,48 +562,48 @@ rclone() {
     mkdir -p "${DEST_DIR}"
     case "${RCLONE_COMPRESS_METHOD}" in
         bzip2)
-        tar_parameters=("bzip2")
+        tar_compress_parameters=("bzip2")
         readonly backup_extension="tar.bz2"
         ;;
 
         gzip)
-        tar_parameters=("gzip")
+        tar_compress_parameters=("gzip")
         readonly backup_extension="tar.gz"
         ;;
 
         lzip)
-        tar_parameters=("lzip")
+        tar_compress_parameters=("lzip")
         readonly backup_extension="tar.lz"
         ;;
 
         lzma)
-        tar_parameters=("lzma")
+        tar_compress_parameters=("lzma")
         readonly backup_extension="tar.lzma"
         ;;
 
         lzop)
-        tar_parameters=("lzop")
+        tar_compress_parameters=("lzop")
         readonly backup_extension="tar.lzo"
         ;;
 
         xz)
-        tar_parameters=("xz")
+        tar_compress_parameters=("xz")
         readonly backup_extension="tar.xz"
         ;;
 
         zstd)
-        tar_parameters=("zstd")
+        tar_compress_parameters=("zstd")
         readonly backup_extension="tar.zst"
         ;;
 
         *)
-        log ERROR 'TAR_COMPRESS_METHOD is not valid!'
+        log ERROR 'RCLONE_COMPRESS_METHOD is not valid!'
         exit 1
         ;;
     esac
 
-    tar_parameters+=("${TAR_COMPRESS_PARAMETERS[@]}")
-    readonly tar_parameters
+    tar_compress_parameters+=("${TAR_COMPRESS_PARAMETERS[@]}")
+    readonly tar_compress_parameters
   }
 
   backup() {
@@ -615,7 +615,7 @@ rclone() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" --use-compress-program "${tar_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
+    command tar "${excludes[@]}" --use-compress-program "${tar_compress_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
