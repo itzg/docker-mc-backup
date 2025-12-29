@@ -58,6 +58,11 @@ RUN apk -U --no-cache add \
     tar \
     tzdata \
     rsync \
+    bzip2 \
+    gzip \
+    lzip \
+    lzop \
+    xz \
     zstd
 
 
