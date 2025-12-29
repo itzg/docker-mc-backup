@@ -296,11 +296,6 @@ tar() {
         readonly backup_extension="tar.xz"
         ;;
 
-        compress)
-        tar_parameters=("compress")
-        readonly backup_extension="tar.Z"
-        ;;
-
         zstd)
         tar_parameters=("zstd")
         readonly backup_extension="tar.zst"
@@ -325,7 +320,7 @@ tar() {
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     exitCode=0
-    command tar "${excludes[@]}" --use-compress-program "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
+    command tar "${excludes[@]}" --use-compress-program "${tar_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
     if [[ $exitCode -eq 1 ]]; then
       log WARN "Dat files changed as we read it"
     fi
@@ -596,11 +591,6 @@ rclone() {
         readonly backup_extension="tar.xz"
         ;;
 
-        compress)
-        tar_parameters=("compress")
-        readonly backup_extension="tar.Z"
-        ;;
-
         zstd)
         tar_parameters=("zstd")
         readonly backup_extension="tar.zst"
@@ -625,7 +615,7 @@ rclone() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" --use-compress-program "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
+    command tar "${excludes[@]}" --use-compress-program "${tar_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
