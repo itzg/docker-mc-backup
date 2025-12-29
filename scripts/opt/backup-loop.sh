@@ -605,7 +605,6 @@ rclone() {
     tar_compress_parameters+=("${TAR_COMPRESS_PARAMETERS[@]}")
     readonly tar_compress_parameters
   }
-
   backup() {
     if [[ ! $1 ]]; then
       log INTERNALERROR "Backup log path not passed to rsync.backup! Aborting"
