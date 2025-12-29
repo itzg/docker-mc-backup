@@ -98,13 +98,13 @@ Set `BACKUP_METHOD` to one of the following, where the default is `tar`.
 - `DEST_DIR`=/backups
 - `LINK_LATEST`=false
 - `TAR_COMPRESS_METHOD`=gzip
-- `ZSTD_PARAMETERS`=-3 --long=25 --single-thread
+- `TAR_COMPRESS_PARAMETERS`
 
 `LINK_LATEST` is a true/false flag that creates a symbolic link to the latest backup.
 
-`TAR_COMPRESS_METHOD` is the compression method used by tar. Valid value: gzip bzip2 zstd
+`TAR_COMPRESS_METHOD` is the compression method used by tar. Valid value: bzip2 gzip lzip lzma lzop xz zstd
 
-`ZSTD_PARAMETERS` sets the parameters for `zstd` compression. The `--long` parameter affects RAM requirements for both compression and decompression (the default of 25 means 2^25 bytes = 32 MB).
+`TAR_COMPRESS_PARAMETERS` sets the parameters for compression. None are fine.
 
 #### `rsync`
 
@@ -155,7 +155,7 @@ There are a few special environment variables for the rclone method.
 - `DEST_DIR`=/backups is the container path where the archive is temporarily created
 - `RCLONE_DEST_DIR` is the directory on the remote
 
-Other parameters such as `PRUNE_BACKUPS_DAYS`, `ZSTD_PARAMETERS`, and `BACKUP_NAME` are all used as well.
+Other parameters such as `PRUNE_BACKUPS_DAYS`, `TAR_COMPRESS_PARAMETERS`, and `BACKUP_NAME` are all used as well.
 
 **Note** that you will need to place your rclone config file in `/config/rclone/rclone.conf`.
 This can be done by adding it through docker-compose,
