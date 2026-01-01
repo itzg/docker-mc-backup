@@ -104,7 +104,7 @@ Set `BACKUP_METHOD` to one of the following, where the default is `tar`.
 
 `TAR_COMPRESS_METHOD` is the compression method used by tar. Valid value: bzip2 gzip lzip lzma lzop xz zstd
 
-`TAR_COMPRESS_PARAMETERS` sets the parameters for compression. None are fine.
+`TAR_COMPRESS_PARAMETERS` sets the parameters for compression. Leaving this blank is fine.
 
 #### `rsync`
 
