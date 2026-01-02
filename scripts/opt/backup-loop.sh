@@ -23,8 +23,8 @@ fi
 : "${PAUSE_IF_NO_PLAYERS:=false}"
 : "${PLAYERS_ONLINE_CHECK_INTERVAL:=5m}"
 : "${BACKUP_METHOD:=tar}" # currently one of tar, restic, rsync
-: "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip zstd
-: "${ZSTD_PARAMETERS:=-3 --long=25 --single-thread}"
+: "${TAR_COMPRESS_METHOD:=gzip}"  # bzip2 gzip lzip lzma lzop xz zstd
+: "${TAR_COMPRESS_PARAMETERS:=}"
 : "${PRUNE_BACKUPS_DAYS:=7}"
 : "${PRUNE_BACKUPS_COUNT:=}"
 : "${PRUNE_RESTIC_RETENTION:=--keep-within ${PRUNE_BACKUP_DAYS:-7}d}"
@@ -266,18 +266,38 @@ tar() {
     prune_backups_minutes=$(echo "scale=0; (${PRUNE_BACKUPS_DAYS} * 1440)/1"|bc)
 
     case "${TAR_COMPRESS_METHOD}" in
-        gzip)
-        readonly tar_parameters=("--gzip")
-        readonly backup_extension="tgz"
+        bzip2)
+        tar_compress_parameters=("bzip2")
+        readonly backup_extension="tar.bz2"
         ;;
 
-        bzip2)
-        readonly tar_parameters=("--bzip2")
-        readonly backup_extension="bz2"
+        gzip)
+        tar_compress_parameters=("gzip")
+        readonly backup_extension="tar.gz"
+        ;;
+
+        lzip)
+        tar_compress_parameters=("lzip")
+        readonly backup_extension="tar.lz"
+        ;;
+
+        lzma)
+        tar_compress_parameters=("lzma")
+        readonly backup_extension="tar.lzma"
+        ;;
+
+        lzop)
+        tar_compress_parameters=("lzop")
+        readonly backup_extension="tar.lzo"
+        ;;
+
+        xz)
+        tar_compress_parameters=("xz")
+        readonly backup_extension="tar.xz"
         ;;
 
         zstd)
-        readonly tar_parameters=("--use-compress-program" "zstd ${ZSTD_PARAMETERS}")
+        tar_compress_parameters=("zstd")
         readonly backup_extension="tar.zst"
         ;;
 
@@ -286,6 +306,9 @@ tar() {
         exit 1
         ;;
     esac
+
+    tar_compress_parameters+=("${TAR_COMPRESS_PARAMETERS[@]}")
+    readonly tar_compress_parameters
   }
   backup() {
     if [[ ! $1 ]]; then
@@ -297,7 +320,7 @@ tar() {
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     exitCode=0
-    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
+    command tar "${excludes[@]}" -I "${tar_compress_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
     if [[ $exitCode -eq 1 ]]; then
       log WARN "Dat files changed as we read it"
     fi
@@ -538,18 +561,38 @@ rclone() {
     # Check if rclone is installed and configured correctly
     mkdir -p "${DEST_DIR}"
     case "${RCLONE_COMPRESS_METHOD}" in
-        gzip)
-        readonly tar_parameters=("--gzip")
-        readonly backup_extension="tgz"
+        bzip2)
+        tar_compress_parameters=("bzip2")
+        readonly backup_extension="tar.bz2"
         ;;
 
-        bzip2)
-        readonly tar_parameters=("--bzip2")
-        readonly backup_extension="bz2"
+        gzip)
+        tar_compress_parameters=("gzip")
+        readonly backup_extension="tar.gz"
+        ;;
+
+        lzip)
+        tar_compress_parameters=("lzip")
+        readonly backup_extension="tar.lz"
+        ;;
+
+        lzma)
+        tar_compress_parameters=("lzma")
+        readonly backup_extension="tar.lzma"
+        ;;
+
+        lzop)
+        tar_compress_parameters=("lzop")
+        readonly backup_extension="tar.lzo"
+        ;;
+
+        xz)
+        tar_compress_parameters=("xz")
+        readonly backup_extension="tar.xz"
         ;;
 
         zstd)
-        readonly tar_parameters=("--use-compress-program" "zstd ${ZSTD_PARAMETERS}")
+        tar_compress_parameters=("zstd")
         readonly backup_extension="tar.zst"
         ;;
 
@@ -558,6 +601,9 @@ rclone() {
         exit 1
         ;;
     esac
+
+    tar_compress_parameters+=("${TAR_COMPRESS_PARAMETERS[@]}")
+    readonly tar_compress_parameters
   }
   backup() {
     if [[ ! $1 ]]; then
@@ -568,7 +614,7 @@ rclone() {
     ts=$(date +"%Y%m%d-%H%M%S")
     outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
-    command tar "${excludes[@]}" "${tar_parameters[@]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
+    command tar "${excludes[@]}" -I "${tar_compress_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
       true
     elif [ ${exitCode:-0} -eq 1 ]; then
