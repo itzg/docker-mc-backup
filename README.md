@@ -119,7 +119,7 @@ Set `BACKUP_METHOD` to one of the following, where the default is `tar`.
 - `RESTIC_VERBOSE`=false : set to "true" to enable verbose output during restic backup operation
 
 See [restic documentation](https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html) on what variables are needed to be defined.
-At least one of `RESTIC_PASSWORD*` variables need to be defined, along with `RESTIC_REPOSITORY`.
+At least one of the `RESTIC_PASSWORD*` variables need to be defined, along with one of the `RESTIC_REPOSITORY*` variables.
 
 Use the `RESTIC_ADDITIONAL_TAGS` variable to define a space separated list of additional restic tags. The backup will always be tagged with the value of `BACKUP_NAME`. e.g.: `RESTIC_ADDITIONAL_TAGS=mc_backups foo bar` will tag your backup with `foo`, `bar`, `mc_backups` and the value of `BACKUP_NAME`.
 

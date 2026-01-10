@@ -458,8 +458,8 @@ restic() {
       log ERROR "At least one of" RESTIC_PASSWORD{,_FILE,_COMMAND} "needs to be set!"
       return 1
     fi
-    if [ -z "${RESTIC_REPOSITORY:-}" ]; then
-      log ERROR "RESTIC_REPOSITORY is not set!"
+    if [ -z "${RESTIC_REPOSITORY:-}" ] && [ -z "${RESTIC_REPOSITORY_FILE:-}" ]; then
+      log ERROR "RESTIC_REPOSITORY or RESTIC_REPOSITORY_FILE is not set!"
       return 1
     fi
 
