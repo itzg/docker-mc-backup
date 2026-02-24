@@ -44,6 +44,7 @@ fi
 : "${RESTIC_HOSTNAME:=$(hostname)}"
 : "${RESTIC_VERBOSE:=false}"
 : "${RESTIC_LIMIT_UPLOAD:=0}"
+: "${RESTIC_CAT_CONFIG_TIMEOUT:=10s}"
 : "${RESTIC_RETRY_LOCK:=1m}" # Max time restic will retry to acquire a repository lock before failing
 : "${XDG_CONFIG_HOME:=/config}" # for rclone's base config path
 : "${ONE_SHOT:=false}"
@@ -466,10 +467,7 @@ restic() {
     # Duplicate stdout to a first unused file descriptor (fd) 5 which will be used later
     exec 5>&1
 
-    # Run restic, prefix each line and redirect output to fd 5 in a subshell (so it can be shown in realtime).
-    # And finally capture the whole output for later processing
-    # printf("%s %s %s\n", strftime("%FT%T%z"), level, $0);
-    if output="$(command restic cat config 2>&1 >/dev/null | stdbuf -oL awk '{printf("%s restic cat config: %s\n", strftime("%FT%T%z"), $0);}' | tee >(cat - >&5))"; then
+    if output="$(command timeout "${RESTIC_CAT_CONFIG_TIMEOUT}" restic cat config 2>&1 >/dev/null)"; then
       log INFO "Repository already initialized"
       log INFO "Checking for stale locks"
       _unlock
