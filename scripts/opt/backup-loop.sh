@@ -464,9 +464,6 @@ restic() {
       return 1
     fi
 
-    # Duplicate stdout to a first unused file descriptor (fd) 5 which will be used later
-    exec 5>&1
-
     if output="$(command timeout "${RESTIC_CAT_CONFIG_TIMEOUT}" restic cat config 2>&1 >/dev/null)"; then
       log INFO "Repository already initialized"
       log INFO "Checking for stale locks"
