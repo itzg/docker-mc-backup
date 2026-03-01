@@ -32,7 +32,7 @@ RUN bunzip2 /tmp/restic.bz2 && \
     chmod +x /opt/restic
 
 # renovate: datasource=github-releases packageName=itzg/entrypoint-demoter
-ARG DEMOTER_VERSION=0.4.8
+ARG DEMOTER_VERSION=0.4.9
 ADD https://github.com/itzg/entrypoint-demoter/releases/download/v${DEMOTER_VERSION}/entrypoint-demoter_${DEMOTER_VERSION}_Linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/entrypoint-demoter.tar.gz
 
 RUN tar x -f /tmp/entrypoint-demoter.tar.gz -C /opt/ && \
