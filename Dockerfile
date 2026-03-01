@@ -22,7 +22,7 @@ RUN tar x -f /tmp/mc-monitor.tar.gz -C /opt/ && \
     chmod +x /opt/mc-monitor
 
 # renovate: datasource=github-releases packageName=restic/restic
-ARG RESTIC_VERSION=0.18.0
+ARG RESTIC_VERSION=0.18.1
 # NOTE: restic releases don't differentiate arm v6 from v7, so TARGETVARIANT is not used
 # and have to assume they release armv7
 ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${TARGETARCH}.bz2 /tmp/restic.bz2
