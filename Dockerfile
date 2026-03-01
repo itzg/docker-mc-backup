@@ -8,7 +8,7 @@ ARG TARGETVARIANT
 RUN mkdir -p /opt
 
 # renovate: datasource=github-releases packageName=itzg/rcon-cli
-ARG RCON_CLI_VERSION=1.7.2
+ARG RCON_CLI_VERSION=1.7.3
 ADD https://github.com/itzg/rcon-cli/releases/download/${RCON_CLI_VERSION}/rcon-cli_${RCON_CLI_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/rcon-cli.tar.gz
 
 RUN tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
