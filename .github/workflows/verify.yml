@@ -36,12 +36,12 @@ jobs:
         uses: hadolint/hadolint-action@v3.3.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           driver-opts: network=host
 
       - name: Build and push to local registry
-        uses: docker/build-push-action@v6.19.2
+        uses: docker/build-push-action@v7.0.0
         with:
           push: true
           tags: localhost:5000/itzg/mc-backup:latest
