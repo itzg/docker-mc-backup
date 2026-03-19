@@ -431,15 +431,21 @@ restic() {
   }
 
   _unlock() {
-  if ! [ -z "${output=$(command restic list locks 2>&1)}" ];then
-     log WARN "Confirmed stale lock on repo, unlocking..."
-     if [[ unlock=$(command restic unlock 2>&1) == *"success"* ]]; then
+    if output="$(command restic list locks 2>&1)" && [ -n "${output}" ]; then
+      log WARN "Confirmed stale lock on repo, unlocking..."
+      if unlock_output="$(command restic unlock 2>&1)"; then
+        if [ -n "${unlock_output}" ]; then
+          <<<"${unlock_output}" log INFO
+        fi
         log INFO "Successfully unlocked the repo"
-     else
+      else
+        if [ -n "${unlock_output}" ]; then
+          <<<"${unlock_output}" log ERROR
+        fi
         log ERROR "Unable to unlock the repo. Is there another process running?"
         return 1
-     fi
-  fi
+      fi
+    fi
   }
 
   _check() {
