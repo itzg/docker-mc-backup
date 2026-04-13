@@ -17,6 +17,7 @@ fi
 : "${SRC_DIR:=/data}"
 : "${DEST_DIR:=/backups}"
 : "${BACKUP_NAME:=world}"
+: "${NAME_WITH_VERSION:=false}"
 : "${INITIAL_DELAY:=2m}"
 : "${BACKUP_INTERVAL:=${INTERVAL_SEC:-24h}}"
 : "${BACKUP_ON_STARTUP:=true}"
@@ -69,6 +70,38 @@ export SRC_DIR
 export DEST_DIR
 export BACKUP_NAME
 
+resolve_backup_name() {
+  if ! isTrue "$NAME_WITH_VERSION"; then
+    echo "$BACKUP_NAME"
+    return 0
+  fi
+
+  if ! command -v mc-monitor >/dev/null 2>&1; then
+    log WARN "NAME_WITH_VERSION is enabled, but mc-monitor is not available; using backup name without version"
+    echo "$BACKUP_NAME"
+    return 1
+  fi
+
+  if ! server_json="$(mc-monitor status --host "${SERVER_HOST}" --port "${SERVER_PORT}" --json 2>/dev/null)"; then
+    log WARN "Unable to query server version from ${SERVER_HOST}:${SERVER_PORT}; using backup name without version"
+    echo "$BACKUP_NAME"
+    return 1
+  fi
+
+  if ! server_version="$(jq -r '.server_info.version.name // empty' <<<"${server_json}")"; then
+    log WARN "Unable to parse server version from mc-monitor output; using backup name without version"
+    echo "$BACKUP_NAME"
+    return 1
+  fi
+
+  if [ -n "${server_version}" ]; then
+    # convert non vanilla repsonses like "Paper 1.21.11"
+    server_version="${server_version// /-}"
+    server_version="${server_version,,}"
+    echo "${BACKUP_NAME}-${server_version}"
+  fi
+}
+
 ###############
 ##  common   ##
 ## functions ##
@@ -111,24 +144,23 @@ log() {
   oldState=$(shopt -po xtrace || true)
   shopt -u -o xtrace
 
+  local level
   if [ "$#" -lt 1 ]; then
-    log INTERNALERROR "Wrong number of arguments passed to log function"
-    eval "$oldState"
-    return 2
+    level=INFO
+  else
+    level="${1}"
+    shift
   fi
-  local level="${1}"
-  shift
-  local valid_levels=(
-    "INFO"
-    "WARN"
-    "ERROR"
-    "INTERNALERROR"
-  )
-  if ! is_elem_in_array "${level}" "${valid_levels[@]}"; then
-    log INTERNALERROR "Log level ${level} is not a valid level."
-    eval "$oldState"
-    return 2
-  fi
+
+  local out
+  case "$level" in
+  INFO)
+    out=/dev/stdout
+    ;;
+  *)
+    out=/dev/stderr
+    ;;
+  esac
   (
     # If any arguments are passed besides log level
     if [ "$#" -ge 1 ]; then
@@ -141,7 +173,7 @@ log() {
     if [ "${level}" == "INTERNALERROR" ]; then
       echo "Please report this: https://github.com/itzg/docker-mc-backup/issues"
     fi
-  ) | awk -v level="${level}" '{ printf("%s %s %s\n", strftime("%FT%T%z"), level, $0); fflush(); }'
+  ) | awk -v level="${level}" -v out="$out" '{ printf("%s %s %s\n", strftime("%FT%T%z"), level, $0) > out; fflush(out); }'
   eval "$oldState"
 } >&2
 
@@ -318,7 +350,7 @@ tar() {
     fi
 
     ts=$(date +"%Y%m%d-%H%M%S")
-    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
+    outFile="${DEST_DIR}/$(resolve_backup_name)-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     exitCode=0
     command tar "${excludes[@]}" -I "${tar_compress_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" 2>&1 | tee "$1" || exitCode=$?
@@ -326,7 +358,7 @@ tar() {
       log WARN "Dat files changed as we read it"
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
-      ln -sf "${BACKUP_NAME}-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
+      ln -sf "$(resolve_backup_name)-${ts}.${backup_extension}" "${DEST_DIR}/latest.${backup_extension}"
     fi
     return $exitCode
   }
@@ -371,7 +403,7 @@ rsync() {
     fi
 
     ts=$(date +"%Y%m%d-%H%M%S")
-    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}"
+    outFile="${DEST_DIR}/$(resolve_backup_name)-${ts}"
     if [ -d "${DEST_DIR}/latest" ]; then
       log INFO "Latest found so using it for link"
       link_dest=("--link-dest" "${DEST_DIR}/latest")
@@ -380,7 +412,7 @@ rsync() {
       link_dest=()
     else
       log INFO "Searching for latest backup to link with"
-      link_dest=("--link-dest" $(ls -td "${DEST_DIR}/${BACKUP_NAME}-"*|head -1))
+      link_dest=("--link-dest" $(ls -td "${DEST_DIR}/$(resolve_backup_name)-"*|head -1))
     fi
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     mkdir -p $outFile
@@ -393,7 +425,7 @@ rsync() {
       log WARN "Dat files changed as we read it"
     fi
     if [ "${LINK_LATEST^^}" == "TRUE" ]; then
-      ln -sfT "${BACKUP_NAME}-${ts}" "${DEST_DIR}/latest"
+      ln -sfT "$(resolve_backup_name)-${ts}" "${DEST_DIR}/latest"
     fi
     return $exitCode
   }
@@ -501,7 +533,7 @@ restic() {
 
     # Used to construct tagging arguments and filters for snapshots
     read -ra restic_tags <<< ${RESTIC_ADDITIONAL_TAGS}
-    restic_tags+=("${BACKUP_NAME}")
+    restic_tags+=("$(resolve_backup_name)")
     readonly restic_tags
 
     # Arguments to use to tag the snapshots with
@@ -551,7 +583,7 @@ rclone() {
   readarray -td, includes_patterns < <(printf '%s' "${INCLUDES:-.}")
 
   _find_old_backups() {
-    command rclone lsf --format "tp" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}" | grep ${BACKUP_NAME} | awk \
+    command rclone lsf --format "tp" "${RCLONE_REMOTE}:${RCLONE_DEST_DIR}" | grep $(resolve_backup_name) | awk \
             -v PRUNE_DATE="$(date '+%Y-%m-%d %H:%M:%S' --date="${PRUNE_BACKUPS_DAYS} days ago")" \
             -v DESTINATION="${RCLONE_DEST_DIR%/}" \
             'BEGIN { FS=";" } $1 < PRUNE_DATE { printf "%s/%s\n", DESTINATION, $2 }'
@@ -613,7 +645,7 @@ rclone() {
     fi
 
     ts=$(date +"%Y%m%d-%H%M%S")
-    outFile="${DEST_DIR}/${BACKUP_NAME}-${ts}.${backup_extension}"
+    outFile="${DEST_DIR}/$(resolve_backup_name)-${ts}.${backup_extension}"
     log INFO "Backing up content in ${SRC_DIR} to ${outFile}"
     command tar "${excludes[@]}" -I "${tar_compress_parameters[*]}" -cf "${outFile}" -C "${SRC_DIR}" "${includes_patterns[@]}" || exitCode=$?
     if [ ${exitCode:-0} -eq 0 ]; then
