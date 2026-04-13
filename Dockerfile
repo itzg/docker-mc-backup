@@ -62,7 +62,8 @@ RUN apk -U --no-cache add \
     lzip \
     lzop \
     xz \
-    zstd
+    zstd \
+    jq
 
 
 COPY --from=builder /opt/rcon-cli /opt/rcon-cli

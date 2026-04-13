@@ -12,6 +12,7 @@ Provides a side-car container to back up [itzg/minecraft-server](https://github.
 
 - `SRC_DIR`=/data
 - `BACKUP_NAME`=world
+- `NAME_WITH_VERSION` : Set to "true" to append the server version to the backup name.
 - `BACKUP_METHOD`=tar  : [see below](#backup-methods)
 - `INITIAL_DELAY`=2m
 - `BACKUP_INTERVAL`=24h
