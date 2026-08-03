@@ -18,6 +18,7 @@ trap 'sudo rm -rf "${TMP_DIR}"' EXIT
 : "${EXCLUDES:='*.jar,exclude_dir'}"
 : "${RCON_PATH:=/usr/bin/rcon-cli}"
 : "${RESTIC_PASSWORD:=1234}"
+: "${RESTIC_HOSTNAME:=legacy-restic-host}"
 
 export LOCAL_SRC_DIR="${TMP_DIR}/${SRC_DIR}"
 export LOCAL_DEST_DIR="${TMP_DIR}/${DEST_DIR}"
@@ -33,6 +34,7 @@ export INITIAL_DELAY
 export EXCLUDES
 export RCON_PATH
 export RESTIC_PASSWORD
+export RESTIC_HOSTNAME
 
 timeout --kill-after=20 50 docker run --rm \
     --env SRC_DIR \
@@ -42,6 +44,7 @@ timeout --kill-after=20 50 docker run --rm \
     --env PRUNE_BACKUPS_DAYS \
     --env RESTIC_REPOSITORY \
     --env RESTIC_PASSWORD \
+    --env RESTIC_HOSTNAME \
     --env DEBUG \
     --env BACKUP_METHOD=restic \
     --mount "type=bind,src=${LOCAL_SRC_DIR},dst=${SRC_DIR}" \
@@ -59,5 +62,6 @@ restic() {
       localhost:5000/itzg/mc-backup:latest "${@}"
 }
 restic ls latest
+test "$(restic snapshots --host "${RESTIC_HOSTNAME}" --json | jq length)" -eq 1
 ! restic ls latest 2>/dev/null | grep -q "exclude_"
 [ 4 -eq "$(restic ls latest 2>/dev/null | grep -c "backup_me")" ]

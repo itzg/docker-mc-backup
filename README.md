@@ -124,7 +124,7 @@ At least one of the `RESTIC_PASSWORD*` variables need to be defined, along with 
 
 Use the `RESTIC_ADDITIONAL_TAGS` variable to define a space separated list of additional restic tags. The backup will always be tagged with the value of `BACKUP_NAME`. e.g.: `RESTIC_ADDITIONAL_TAGS=mc_backups foo bar` will tag your backup with `foo`, `bar`, `mc_backups` and the value of `BACKUP_NAME`.
 
-By default, the hostname, typically the container/pod's name, will be used as the Restic backup's hostname. That can be overridden by setting `RESTIC_HOSTNAME` 
+By default, the hostname, typically the container/pod's name, will be used as the Restic backup's hostname. That can be overridden by setting `RESTIC_HOST`. The legacy `RESTIC_HOSTNAME` variable is also supported when `RESTIC_HOST` is not set.
 
 If you want to limit the restic backup upload speed, you can set the `RESTIC_LIMIT_UPLOAD` variable to a value in KiB/s. For example, `RESTIC_LIMIT_UPLOAD=1024` will limit the upload speed to approximately 1 MiB/s. By default, there is no limit.
 
