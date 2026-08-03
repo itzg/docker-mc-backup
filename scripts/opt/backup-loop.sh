@@ -42,7 +42,7 @@ fi
 : "${EXCLUDES_FILE:=}" # Path to file containing list of glob(3) patterns
 : "${LINK_LATEST:=false}"
 : "${RESTIC_ADDITIONAL_TAGS=mc_backups}" # Space separated list of restic tags
-: "${RESTIC_HOSTNAME:=$(hostname)}"
+: "${RESTIC_HOST:=${RESTIC_HOSTNAME:-$(hostname)}}"
 : "${RESTIC_VERBOSE:=false}"
 : "${RESTIC_LIMIT_UPLOAD:=0}"
 : "${RESTIC_CAT_CONFIG_TIMEOUT:=10s}"
@@ -69,6 +69,7 @@ export XDG_CONFIG_HOME
 export SRC_DIR
 export DEST_DIR
 export BACKUP_NAME
+export RESTIC_HOST
 
 resolve_backup_name() {
   if ! isTrue "$NAME_WITH_VERSION"; then
@@ -459,7 +460,7 @@ restic() {
 
   _delete_old_backups() {
     # shellcheck disable=SC2086
-    command restic --retry-lock "${RESTIC_RETRY_LOCK}" forget --host "${RESTIC_HOSTNAME}" --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
+    command restic --retry-lock "${RESTIC_RETRY_LOCK}" forget --tag "${restic_tags_filter}" ${PRUNE_RESTIC_RETENTION} "${@}"
   }
 
   _unlock() {
@@ -553,10 +554,9 @@ restic() {
       exit 1
     fi
 
-    log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOSTNAME}"
+    log INFO "Backing up content in ${SRC_DIR} as host ${RESTIC_HOST}"
     args=(
       --retry-lock "${RESTIC_RETRY_LOCK}"
-      --host "${RESTIC_HOSTNAME}"
       --limit-upload "${RESTIC_LIMIT_UPLOAD}"
     )
     if isDebug || isTrue "$RESTIC_VERBOSE"; then
