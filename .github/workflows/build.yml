@@ -24,7 +24,7 @@ jobs:
 #          ignore: tests
 
       - name: Hadolint Action
-        uses: hadolint/hadolint-action@v3.3.0
+        uses: hadolint/hadolint-action@v3.4.0
 
       - name: Setup qemu
         uses: docker/setup-qemu-action@v4.2.0
