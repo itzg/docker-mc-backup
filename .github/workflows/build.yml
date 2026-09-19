@@ -27,7 +27,7 @@ jobs:
         uses: hadolint/hadolint-action@v3.5.0
 
       - name: Setup qemu
-        uses: docker/setup-qemu-action@v4.3.0
+        uses: docker/setup-qemu-action@v4.4.0
 
       - name: Setup buildx
         id: buildx
@@ -64,7 +64,7 @@ jobs:
             type=ref,event=branch,enable=${{ github.ref_name != github.event.repository.default_branch }}
 
       - name: Build and push
-        uses: docker/build-push-action@v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7
