@@ -8,14 +8,14 @@ ARG TARGETVARIANT
 RUN mkdir -p /opt
 
 # renovate: datasource=github-releases packageName=itzg/rcon-cli
-ARG RCON_CLI_VERSION=1.7.9
+ARG RCON_CLI_VERSION=1.7.10
 ADD https://github.com/itzg/rcon-cli/releases/download/${RCON_CLI_VERSION}/rcon-cli_${RCON_CLI_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/rcon-cli.tar.gz
 
 RUN tar x -f /tmp/rcon-cli.tar.gz -C /opt/ && \
     chmod +x /opt/rcon-cli
 
 # renovate: datasource=github-releases packageName=itzg/mc-monitor
-ARG MC_MONITOR_VERSION=1.19.0
+ARG MC_MONITOR_VERSION=1.20.1
 ADD https://github.com/itzg/mc-monitor/releases/download/${MC_MONITOR_VERSION}/mc-monitor_${MC_MONITOR_VERSION}_linux_${TARGETARCH}${TARGETVARIANT}.tar.gz /tmp/mc-monitor.tar.gz
 
 RUN tar x -f /tmp/mc-monitor.tar.gz -C /opt/ && \
