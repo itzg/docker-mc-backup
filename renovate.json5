@@ -16,7 +16,7 @@
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "All non-major dependencies"
+      "groupName": "all non-major dependencies"
     }
   ]
 }
