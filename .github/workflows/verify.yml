@@ -53,6 +53,9 @@ jobs:
           PRUNE_BACKUPS_DAYS: 3
         run: ./tests/test.simple.tar.sh
 
+      - name: Test tar prune count with latest link
+        run: ./tests/test.prune-count.tar.sh
+
       - name: Test restic handling
         env:
           RESTIC_REPOSITORY: /tmp/dest
