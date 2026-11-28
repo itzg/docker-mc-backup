@@ -282,7 +282,7 @@ tar() {
   }
 
   _find_extra_backups() {
-  find "${DEST_DIR}" -maxdepth 1 -name "*.${backup_extension}" -exec ls -1Nt {} \+ | \
+  find "${DEST_DIR}" -maxdepth 1 -type f -name "*.${backup_extension}" -exec ls -1Nt {} \+ | \
     tail -n +$((PRUNE_BACKUPS_COUNT + 1)) | \
     tr '\n' '\0'
   }
